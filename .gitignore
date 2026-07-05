@@ -16,7 +16,6 @@ build/
 .DS_Store  
 */target/  
 */build/  
-*/bin/  
-application.properties  
+*/bin/   
 application-dev.properties  
 application-prod.properties  

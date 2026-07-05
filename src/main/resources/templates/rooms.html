@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room Management</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        button, select {
+            cursor: pointer;
+        }
+
+        /* ===== Common Components ===== */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            width: 550px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 7px 14px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-info {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, .2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h3 {
+            color: #2a5298;
+        }
+
+        /* ===== Table ===== */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background: #2a5298;
+            color: #fff;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* ===== Form Elements ===== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .form-control:read-only {
+            background: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 3px;
+            display: none;
+        }
+
+        /* ===== Two Column Form Layout ===== */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        /* ===== Search & Filter ===== */
+        .search-box {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .search-input {
+            padding: 10px 10px 10px 35px;
+            width: 250px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 10px center;
+            background-size: 16px;
+        }
+
+        /* ===== Pagination ===== */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pagination-info {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-size-select {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Action Buttons ===== */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 4px;
+        }
+
+        /* ===== Card Header ===== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-header h2 {
+            color: #2a5298;
+            font-size: 1.5rem;
+        }
+
+        /* ===== Quick Actions ===== */
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ===== Modal Backdrop Fix ===== */
+        .modal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: -1;
+        }
+
+        /* ===== Logout Modal Styles ===== */
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Delete Modal Styles ===== */
+        .delete-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .delete-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 8px;
+        }
+
+        .delete-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .delete-message .highlight {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .delete-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 500px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .card-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box {
+                width: 100%;
+            }
+            .search-input {
+                width: 100%;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+            .delete-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .delete-actions .btn {
+                width: 100%;
+            }
+            .quick-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .quick-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation">
+        <h2>Admin Panel</h2>
+        <a href="/admin-dashboard">🏠 Home</a>
+        <a href="/students">👨‍🎓 Students</a>
+        <a href="/exams">📝 Exams</a>
+        <a href="/rooms" class="active">🏫 Rooms</a>
+        <a href="/invigilators">👨‍🏫 Invigilators</a>
+        <a href="/generate-seating">🔄 Generate Seating</a>
+        <a href="/view-seating">👀 View Seating</a>
+        <a href="/charts">📊 Charts</a>
+        <a href="/bulk-upload">📤 Bulk Upload</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h3>Room Management</h3>
+            <button type="button" class="btn btn-danger" onclick="RoomManager.openLogoutConfirm()">
+                🚪 Logout
+            </button>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Quick Actions Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Quick Actions</h2>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-primary" onclick="RoomManager.openAddModal()">
+                    ➕ Add Room
+                </button>
+                <button class="btn btn-success" onclick="window.location.href='/bulk-upload'">
+                    📤 Bulk Upload
+                </button>
+                <!--<button class="btn btn-info" onclick="RoomManager.loadRooms()">
+                    🔄 Refresh List
+                </button>-->
+            </div>
+        </section>
+
+        <!-- Room Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Rooms List</h2>
+                <div class="search-box">
+                    <input type="text" 
+                           id="searchInput" 
+                           class="search-input" 
+                           placeholder="Search rooms..."
+                           onkeyup="RoomManager.searchTable()">
+                </div>
+                <button class="btn btn-primary" onclick="RoomManager.openAddModal()">
+                    ＋ Add Room
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Room Code</th>
+                            <th>Room Name</th>
+                            <th>Capacity</th>
+                            <th>Rows</th>
+                            <th>Columns</th>
+                            <th>Location</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roomBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Showing <span id="startRow">1</span> to <span id="endRow">10</span> of 
+                    <span id="totalRows">0</span> entries
+                </div>
+                <div class="pagination-controls">
+                    <div>
+                        Show 
+                        <select id="pageSize" class="page-size-select" onchange="RoomManager.changePageSize()">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                        </select>
+                        entries
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button id="prevBtn" class="btn btn-secondary" onclick="RoomManager.prevPage()" disabled>
+                            ← Previous
+                        </button>
+                        <span id="pageInfo" style="font-weight: 600; color: #374151;">Page 1</span>
+                        <button id="nextBtn" class="btn btn-secondary" onclick="RoomManager.nextPage()" disabled>
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add/Edit Room Modal -->
+    <div class="modal" id="roomModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <h3 id="modalTitle">Add Room</h3>
+            <form id="roomForm">
+                <input type="hidden" id="roomId">
+                
+                <!-- Row 1: Room Code & Room Name -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="roomCode" class="form-label">Room Code *</label>
+                        <input type="text" id="roomCode" class="form-control" placeholder="e.g., R101" maxlength="30">
+                        <div id="roomCodeErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="roomName" class="form-label">Room Name *</label>
+                        <input type="text" id="roomName" class="form-control" placeholder="e.g., Lecture Hall 1" maxlength="100">
+                        <div id="roomNameErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 2: Rows & Columns -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="rows" class="form-label">Rows *</label>
+                        <input type="number" id="rows" class="form-control" placeholder="Number of rows" min="1" max="50">
+                        <div id="rowsErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="cols" class="form-label">Columns *</label>
+                        <input type="number" id="cols" class="form-control" placeholder="Number of columns" min="1" max="50">
+                        <div id="colsErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Capacity (Auto-calculated) & Location -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="capacity" class="form-label">Capacity (Auto-calculated)</label>
+                        <input type="number" id="capacity" class="form-control" readonly>
+                    </div>
+                    <div class="form-col">
+                        <label for="roomLocation" class="form-label">Location *</label>
+                        <input type="text" id="roomLocation" class="form-control" placeholder="e.g., Building A, Floor 2" maxlength="100">
+                        <div id="locationErr" class="error-text"></div>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="RoomManager.closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="RoomManager.saveRoom()">Save Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal - Enhanced -->
+    <div class="modal" id="deleteConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="delete-icon">🏫</div>
+            <div class="delete-title">Confirm Delete Room</div>
+            <div class="delete-message">
+                Are you sure you want to delete this room?<br>
+                This action <span class="highlight">cannot be undone</span> and all associated data will be permanently removed.
+            </div>
+            <div class="delete-actions">
+                <button class="btn btn-cancel" onclick="RoomManager.closeDeleteConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-delete" onclick="RoomManager.confirmDelete()">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal - Enhanced -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn btn-cancel" onclick="RoomManager.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-logout" onclick="RoomManager.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 Exam Seating Arrangement System
+    </footer>
+
+    <script>
+        // Configuration
+        const Config = {
+            API_BASE: "/api/admin/rooms",
+            TOAST_DURATION: 3500,
+            DEFAULT_ROWS_PER_PAGE: 10
+        };
+
+        // Toast Notification Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, Config.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+        }
+
+        // Modal Manager
+        class ModalManager {
+            static open(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                    modal.addEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static close(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static closeAll() {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                });
+                document.body.style.overflow = "";
+            }
+            
+            static handleBackdropClick(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.stopPropagation();
+                }
+            }
+        }
+
+        // Form Validation Manager
+        class ValidationManager {
+            static clearErrors() {
+                document.querySelectorAll(".error-text").forEach(el => {
+                    el.style.display = "none";
+                    el.textContent = "";
+                });
+                
+                const formFields = document.querySelectorAll('#roomForm .form-control');
+                formFields.forEach(field => {
+                    field.style.borderColor = '#d1d5db';
+                });
+            }
+            
+            static setError(fieldId, errorId, message) {
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = "block";
+                }
+                const fieldEl = document.getElementById(fieldId);
+                if (fieldEl) {
+                    fieldEl.style.borderColor = "#dc2626";
+                    fieldEl.focus();
+                }
+            }
+            
+            static clearFieldError(fieldId, errorId) {
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) {
+                    errorEl.style.display = "none";
+                }
+                const fieldEl = document.getElementById(fieldId);
+                if (fieldEl) {
+                    fieldEl.style.borderColor = "#d1d5db";
+                }
+            }
+            
+            static calculateCapacity() {
+                const rows = parseInt(document.getElementById("rows").value) || 0;
+                const cols = parseInt(document.getElementById("cols").value) || 0;
+                const capacity = rows * cols;
+                const capacityField = document.getElementById("capacity");
+                if (capacityField) {
+                    capacityField.value = capacity > 0 ? capacity : "";
+                }
+                return capacity;
+            }
+            
+            static validateRoom() {
+                this.clearErrors();
+                let isValid = true;
+                
+                // Room Code validation
+                const roomCode = document.getElementById("roomCode").value.trim();
+                if (!roomCode) {
+                    this.setError("roomCode", "roomCodeErr", "Room Code is required");
+                    isValid = false;
+                } else if (roomCode.length > 30) {
+                    this.setError("roomCode", "roomCodeErr", "Room Code must be 30 characters or less");
+                    isValid = false;
+                }
+                
+                // Room Name validation
+                const roomName = document.getElementById("roomName").value.trim();
+                if (!roomName) {
+                    this.setError("roomName", "roomNameErr", "Room Name is required");
+                    isValid = false;
+                } else if (roomName.length > 100) {
+                    this.setError("roomName", "roomNameErr", "Room Name must be 100 characters or less");
+                    isValid = false;
+                }
+                
+                // Rows validation
+                const rows = document.getElementById("rows").value.trim();
+                if (!rows) {
+                    this.setError("rows", "rowsErr", "Rows is required");
+                    isValid = false;
+                } else if (parseInt(rows) <= 0) {
+                    this.setError("rows", "rowsErr", "Rows must be greater than 0");
+                    isValid = false;
+                } else if (parseInt(rows) > 50) {
+                    this.setError("rows", "rowsErr", "Rows must be 50 or less");
+                    isValid = false;
+                }
+                
+                // Columns validation
+                const cols = document.getElementById("cols").value.trim();
+                if (!cols) {
+                    this.setError("cols", "colsErr", "Columns is required");
+                    isValid = false;
+                } else if (parseInt(cols) <= 0) {
+                    this.setError("cols", "colsErr", "Columns must be greater than 0");
+                    isValid = false;
+                } else if (parseInt(cols) > 50) {
+                    this.setError("cols", "colsErr", "Columns must be 50 or less");
+                    isValid = false;
+                }
+                
+                // Location validation
+                const location = document.getElementById("roomLocation").value.trim();
+                if (!location) {
+                    this.setError("roomLocation", "locationErr", "Location is required");
+                    isValid = false;
+                } else if (location.length > 100) {
+                    this.setError("roomLocation", "locationErr", "Location must be 100 characters or less");
+                    isValid = false;
+                }
+                
+                // Calculate capacity
+                const capacity = this.calculateCapacity();
+                if (capacity <= 0) {
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            static setupRealTimeValidation() {
+                // Auto-calculate capacity when rows/cols change
+                document.getElementById("rows").addEventListener("input", () => {
+                    this.calculateCapacity();
+                    if (document.getElementById("rows").value.trim()) {
+                        this.clearFieldError("rows", "rowsErr");
+                    }
+                });
+                
+                document.getElementById("cols").addEventListener("input", () => {
+                    this.calculateCapacity();
+                    if (document.getElementById("cols").value.trim()) {
+                        this.clearFieldError("cols", "colsErr");
+                    }
+                });
+                
+                // Room Code
+                document.getElementById("roomCode").addEventListener("input", () => {
+                    if (document.getElementById("roomCode").value.trim()) {
+                        this.clearFieldError("roomCode", "roomCodeErr");
+                    }
+                });
+                
+                // Room Name
+                document.getElementById("roomName").addEventListener("input", () => {
+                    if (document.getElementById("roomName").value.trim()) {
+                        this.clearFieldError("roomName", "roomNameErr");
+                    }
+                });
+                
+                // Location
+                document.getElementById("roomLocation").addEventListener("input", () => {
+                    if (document.getElementById("roomLocation").value.trim()) {
+                        this.clearFieldError("roomLocation", "locationErr");
+                    }
+                });
+            }
+        }
+
+        // Room Management Main Class
+        class RoomManager {
+            static rooms = [];
+            static filteredRooms = [];
+            static currentPage = 1;
+            static rowsPerPage = Config.DEFAULT_ROWS_PER_PAGE;
+            static editId = null;
+            static deleteId = null;
+            
+            static async init() {
+                await this.loadRooms();
+                ValidationManager.setupRealTimeValidation();
+                this.setupEventListeners();
+            }
+            
+            static async loadRooms() {
+                try {
+                    const response = await fetch(Config.API_BASE);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.rooms = await response.json();
+                    this.filteredRooms = [...this.rooms];
+                    this.currentPage = 1;
+                    this.renderTable();
+                } catch (error) {
+                    console.error("Failed to load rooms:", error);
+                    ToastManager.error("Failed to load rooms. Please refresh the page.");
+                }
+            }
+            
+            static renderTable() {
+                const tbody = document.getElementById("roomBody");
+                if (!tbody) return;
+                
+                const start = (this.currentPage - 1) * this.rowsPerPage;
+                const end = start + this.rowsPerPage;
+                const pageRooms = this.filteredRooms.slice(start, end);
+                
+                if (pageRooms.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #6b7280; padding: 20px;">
+                                No rooms found. Click "Add Room" to create one.
+                            </td>
+                        </tr>
+                    `;
+                    this.updatePaginationInfo();
+                    return;
+                }
+                
+                tbody.innerHTML = pageRooms.map(room => `
+                    <tr>
+                        <td>${room.id}</td>
+                        <td><strong>${room.roomCode || '-'}</strong></td>
+                        <td>${room.roomName || '-'}</td>
+                        <td>${room.capacity || '-'}</td>
+                        <td>${room.rows || '-'}</td>
+                        <td>${room.cols || '-'}</td>
+                        <td>${room.location || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-info action-btn" 
+                                        onclick="RoomManager.editRoom(${room.id})">
+                                    ✏️ Edit
+                                </button>
+                                <button class="btn btn-danger action-btn" 
+                                        onclick="RoomManager.deleteRoom(${room.id})">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join("");
+                
+                this.updatePaginationInfo();
+            }
+            
+            static updatePaginationInfo() {
+                const total = this.filteredRooms.length;
+                const start = (this.currentPage - 1) * this.rowsPerPage + 1;
+                const end = Math.min(this.currentPage * this.rowsPerPage, total);
+                const totalPages = Math.ceil(total / this.rowsPerPage);
+                
+                document.getElementById("startRow").textContent = total === 0 ? 0 : start;
+                document.getElementById("endRow").textContent = end;
+                document.getElementById("totalRows").textContent = total;
+                document.getElementById("pageInfo").textContent = `Page ${this.currentPage} of ${totalPages || 1}`;
+                
+                document.getElementById("prevBtn").disabled = this.currentPage === 1;
+                document.getElementById("nextBtn").disabled = this.currentPage === totalPages || totalPages === 0;
+            }
+            
+            static searchTable() {
+                const query = document.getElementById("searchInput").value.toLowerCase().trim();
+                
+                this.filteredRooms = this.rooms.filter(room =>
+                    String(room.id).includes(query) ||
+                    (room.roomCode || "").toLowerCase().includes(query) ||
+                    (room.roomName || "").toLowerCase().includes(query) ||
+                    String(room.capacity || "").includes(query) ||
+                    String(room.rows || "").includes(query) ||
+                    String(room.cols || "").includes(query) ||
+                    (room.location || "").toLowerCase().includes(query)
+                );
+                
+                this.currentPage = 1;
+                this.renderTable();
+            }
+            
+            static changePageSize() {
+                this.rowsPerPage = parseInt(document.getElementById("pageSize").value);
+                this.currentPage = 1;
+                this.renderTable();
+            }
+            
+            static nextPage() {
+                const totalPages = Math.ceil(this.filteredRooms.length / this.rowsPerPage);
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.renderTable();
+                }
+            }
+            
+            static prevPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.renderTable();
+                }
+            }
+            
+            static openAddModal() {
+                this.editId = null;
+                document.getElementById("modalTitle").textContent = "Add Room";
+                document.getElementById("roomId").value = "";
+                document.getElementById("roomForm").reset();
+                document.getElementById("capacity").value = "";
+                
+                ValidationManager.clearErrors();
+                
+                const formControls = document.querySelectorAll('#roomForm .form-control');
+                formControls.forEach(control => {
+                    control.style.borderColor = '#d1d5db';
+                });
+                
+                ModalManager.open("roomModal");
+            }
+            
+            static async editRoom(id) {
+                try {
+                    const response = await fetch(`${Config.API_BASE}/${id}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const room = await response.json();
+                    this.editId = id;
+                    
+                    document.getElementById("modalTitle").textContent = "Edit Room";
+                    document.getElementById("roomId").value = room.id;
+                    document.getElementById("roomCode").value = room.roomCode || "";
+                    document.getElementById("roomName").value = room.roomName || "";
+                    document.getElementById("rows").value = room.rows || "";
+                    document.getElementById("cols").value = room.cols || "";
+                    document.getElementById("capacity").value = room.capacity || "";
+                    document.getElementById("roomLocation").value = room.location || "";
+                    
+                    ValidationManager.clearErrors();
+                    ModalManager.open("roomModal");
+                } catch (error) {
+                    console.error("Failed to load room:", error);
+                    ToastManager.error("Failed to load room details.");
+                }
+            }
+            
+            static async saveRoom() {
+                if (!ValidationManager.validateRoom()) {
+                    ToastManager.warning("Please fix the validation errors.");
+                    return;
+                }
+                
+                const room = {
+                    id: document.getElementById("roomId").value || null,
+                    roomCode: document.getElementById("roomCode").value.trim(),
+                    roomName: document.getElementById("roomName").value.trim(),
+                    rows: parseInt(document.getElementById("rows").value),
+                    cols: parseInt(document.getElementById("cols").value),
+                    capacity: parseInt(document.getElementById("capacity").value),
+                    location: document.getElementById("roomLocation").value.trim()
+                };
+                
+                try {
+                    const url = this.editId ? `${Config.API_BASE}/${this.editId}` : Config.API_BASE;
+                    const method = this.editId ? "PUT" : "POST";
+                    
+                    const response = await fetch(url, {
+                        method,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(room)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    this.closeModal();
+                    await this.loadRooms();
+                    
+                    ToastManager.success(
+                        this.editId 
+                            ? "Room updated successfully!" 
+                            : "Room added successfully!"
+                    );
+                } catch (error) {
+                    console.error("Failed to save room:", error);
+                    ToastManager.error(error.message || "Failed to save room. Please try again.");
+                }
+            }
+            
+            static deleteRoom(id) {
+                this.deleteId = id;
+                ModalManager.open("deleteConfirmModal");
+            }
+            
+            static async confirmDelete() {
+                try {
+                    const response = await fetch(`${Config.API_BASE}/${this.deleteId}`, {
+                        method: "DELETE"
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.closeDeleteConfirm();
+                    await this.loadRooms();
+                    
+                    ToastManager.success("Room deleted successfully!");
+                } catch (error) {
+                    console.error("Failed to delete room:", error);
+                    ToastManager.error("Failed to delete room. Please try again.");
+                }
+            }
+            
+            static closeModal() {
+                ModalManager.close("roomModal");
+                document.getElementById("roomForm").reset();
+                document.getElementById("capacity").value = "";
+                ValidationManager.clearErrors();
+                
+                const formControls = document.querySelectorAll('#roomForm .form-control');
+                formControls.forEach(control => {
+                    control.style.borderColor = '#d1d5db';
+                });
+            }
+            
+            static closeDeleteConfirm() {
+                ModalManager.close("deleteConfirmModal");
+                this.deleteId = null;
+            }
+            
+            static openLogoutConfirm() {
+                ModalManager.open("logoutConfirmModal");
+            }
+            
+            static closeLogoutConfirm() {
+                ModalManager.close("logoutConfirmModal");
+            }
+            
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+            
+            static setupEventListeners() {
+                document.getElementById("searchInput").addEventListener("keypress", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.searchTable();
+                    }
+                });
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            RoomManager.init();
+        });
+
+        // Make manager accessible globally for HTML onclick handlers
+        window.RoomManager = RoomManager;
+        window.ToastManager = ToastManager;
+        window.ModalManager = ModalManager;
+        window.ValidationManager = ValidationManager;
+    </script>
+</body>
+</html>

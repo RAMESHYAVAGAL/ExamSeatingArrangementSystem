@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Exam Seating Arrangement</title>
+
+<style>
+@page {
+	margin: 15mm;
+}
+
+body {
+	font-family: Arial, sans-serif;
+	padding: 10px;
+}
+
+.header {
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 15px;
+	font-size: 13px;
+}
+
+th, td {
+	border: 1px solid #000;
+	padding: 8px;
+	text-align: center;
+}
+
+th {
+	background: #f1f5f9;
+	font-weight: bold;
+}
+
+.top-bar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.no-data {
+	text-align: center;
+	padding: 50px 20px;
+	color: #666;
+	font-size: 16px;
+}
+
+.no-data h3 {
+	color: #dc3545;
+	margin-bottom: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+	<div th:if="${seating != null}">
+
+		<div class="header">
+			<h2>EXAM SEATING ARRANGEMENT</h2>
+
+			<p>
+				<b>Exam:</b> <span th:text="${seating.examName}"></span> | <b>Date:</b>
+				<span th:text="${seating.examDate}"></span>
+			</p>
+
+			<p>
+				<b>Time:</b> <span th:text="${seating.examTime}"></span> | <b>Duration:</b>
+				<span th:text="${seating.duration}"></span>
+			</p>
+
+			<p>
+				<b>Room:</b> <span th:text="${seating.roomName}"></span> | <b>Invigilator:</b>
+				<span th:text="${seating.invigilatorName}"></span>
+			</p>
+		</div>
+
+		<table>
+			<thead>
+				<tr>
+					<th>Seat No</th>
+					<th>Hall Ticket No</th>
+					<th>Student Name</th>
+					<th>Roll No</th>
+					<th>Department</th>
+					<th>Year</th>
+					<th>Student Signature</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="s : ${seating.seats}">
+					<td th:text="${s.seatNumber}"></td>
+					<td th:text="${s.hallTicketNo}"></td>
+					<td th:text="${s.studentName}"></td>
+					<td th:text="${s.rollNo}"></td>
+					<td th:text="${s.department}"></td>
+					<td th:text="${s.year}"></td>
+					<td></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div th:if="${seating == null}" class="no-data">
+		<h3>No seating data available</h3>
+		<p>The seating arrangement has not been generated for this exam.</p>
+	</div>
+
+</body>
+</html>

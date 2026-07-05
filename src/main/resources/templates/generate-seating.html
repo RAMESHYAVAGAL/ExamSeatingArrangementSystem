@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Seating</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        button, select {
+            cursor: pointer;
+        }
+
+        /* ===== Common Components ===== */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            width: 600px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 7px 14px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-info {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-hallticket {
+            background: #7c3aed;
+            color: #fff;
+        }
+
+        .btn-hallticket:hover {
+            background: #6d28d9;
+        }
+
+        .btn-disabled {
+            background: #e5e7eb;
+            color: #6b7280;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, .2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h3 {
+            color: #2a5298;
+        }
+
+        /* ===== Table ===== */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        th {
+            background: #2a5298;
+            color: #fff;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* ===== Status Badges ===== */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .status-generated { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-deleted { background: #fee2e2; color: #991b1b; }
+        .status-default { background: #e5e7eb; color: #374151; }
+
+        /* ===== Form Elements ===== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        select.form-control {
+            height: 42px;
+        }
+
+        select.form-control[multiple] {
+            height: auto;
+            min-height: 120px;
+            padding: 8px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 3px;
+            display: none;
+        }
+
+        /* ===== Two Column Form Layout ===== */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+        
+        /* ===== Disabled Field Styling ===== */
+        .form-control:disabled {
+           background-color: #f9fafb;
+           border-color: #e5e7eb;
+           color: #6b7280;
+           cursor: not-allowed;
+           opacity: 0.8;
+        }
+
+        .form-control:disabled option {
+        color: #6b7280;
+        }
+
+        /* ===== Search & Filter ===== */
+        .search-box {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .search-input {
+            padding: 10px 10px 10px 35px;
+            width: 250px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 a5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 10px center;
+            background-size: 16px;
+        }
+
+        /* ===== Pagination ===== */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pagination-info {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-size-select {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+        .toast-hallticket { background: #7c3aed; }
+
+        /* ===== Progress Bar ===== */
+        .progress-container {
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7c3aed, #6d28d9);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .progress-text {
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        /* ===== Quick Actions ===== */
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Action Buttons ===== */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 4px;
+        }
+
+        /* ===== Card Header ===== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-header h2 {
+            color: #2a5298;
+            font-size: 1.5rem;
+        }
+
+        /* ===== Modal Backdrop Fix ===== */
+        .modal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: -1;
+        }
+
+        /* ===== Logout Modal Styles ===== */
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Delete Modal Styles ===== */
+        .delete-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .delete-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 8px;
+        }
+
+        .delete-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .delete-message .highlight {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .delete-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Hall Ticket Modal Styles ===== */
+        .hallticket-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .hallticket-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #7c3aed;
+            margin-bottom: 8px;
+        }
+
+        .hallticket-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .hallticket-message .highlight {
+            color: #7c3aed;
+            font-weight: 600;
+        }
+
+        .hallticket-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 600px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .quick-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .quick-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+            .card-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            .search-box {
+                width: 100%;
+            }
+            .search-input {
+                width: 100%;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+            .delete-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .delete-actions .btn {
+                width: 100%;
+            }
+            .hallticket-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .hallticket-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation">
+        <h2>Admin Panel</h2>
+        <a href="/admin-dashboard">🏠 Home</a>
+        <a href="/students">👨‍🎓 Students</a>
+        <a href="/exams">📝 Exams</a>
+        <a href="/rooms">🏫 Rooms</a>
+        <a href="/invigilators">👨‍🏫 Invigilators</a>
+        <a href="/generate-seating" class="active">🔄 Generate Seating</a>
+        <a href="/view-seating">👀 View Seating</a>
+        <a href="/charts">📊 Charts</a>
+        <a href="/bulk-upload">📤 Bulk Upload</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h3>Generate Seating Arrangement</h3>
+            <button type="button" class="btn btn-danger" onclick="SeatingManager.openLogoutConfirm()">
+                🚪 Logout
+            </button>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Quick Actions Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Quick Actions</h2>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-success" onclick="window.location.href='/bulk-upload'">
+                    📤 Bulk Upload
+                </button>
+                <button class="btn btn-primary" onclick="SeatingManager.openGenerateModal()">
+                    🔄 Generate Seating
+                </button>
+                <!--<button class="btn btn-info" onclick="SeatingManager.loadSeating()">
+                    🔄 Refresh List
+                </button>-->
+            </div>
+        </section>
+
+        <!-- Seating Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Seating Generation</h2>
+                <div class="search-box">
+                    <input type="text" 
+                           id="searchInput" 
+                           class="search-input" 
+                           placeholder="Search seating..."
+                           onkeyup="SeatingManager.searchTable()">
+                </div>
+                <button class="btn btn-primary" onclick="SeatingManager.openGenerateModal()">
+                    🔄 Generate Seating
+                </button>
+            </div>
+
+            <!-- Progress Bar (hidden by default) -->
+            <div id="progressContainer" class="progress-container" style="display: none;">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">Processing...</div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Exam</th>
+                            <th>Departments</th>
+                            <th>Year</th>
+                            <th>Semester</th>
+                            <th>Rooms</th>
+                            <th>Status</th>
+                            <th>Hall Tickets</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="seatingBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Showing <span id="startRow">1</span> to <span id="endRow">10</span> of 
+                    <span id="totalRows">0</span> entries
+                </div>
+                <div class="pagination-controls">
+                    <div>
+                        Show 
+                        <select id="pageSize" class="page-size-select" onchange="SeatingManager.changePageSize()">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                        </select>
+                        entries
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button id="prevBtn" class="btn btn-secondary" onclick="SeatingManager.prevPage()" disabled>
+                            ← Previous
+                        </button>
+                        <span id="pageInfo" style="font-weight: 600; color: #374151;">Page 1</span>
+                        <button id="nextBtn" class="btn btn-secondary" onclick="SeatingManager.nextPage()" disabled>
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Generate Seating Modal -->
+    <div class="modal" id="generateModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <h3 id="modalTitle">Generate Seating</h3>
+            <form id="seatingForm">
+                <input type="hidden" id="seatingId">
+                
+                <!-- Row 1: Exam (full width) -->
+                <div class="form-group">
+                    <label for="examId" class="form-label">Exam *</label>
+                    <select id="examId" class="form-control">
+                        <option value="">-- Select Exam --</option>
+                    </select>
+                    <div id="examIdErr" class="error-text"></div>
+                </div>
+                
+                <!-- Row 2: Departments & Year (side by side) -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="departments" class="form-label">Departments *</label>
+                        <select id="departments" class="form-control" multiple>
+                            <!-- Options loaded dynamically -->
+                        </select>
+                        <div id="departmentsErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="year" class="form-label">Year *</label>
+                        <select id="year" class="form-control" onchange="SeatingManager.onYearChange()">
+                            <option value="">-- Select Year --</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                        <div id="yearErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Semester (full width) -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="semester" class="form-label">Semester *</label>
+                        <select id="semester" class="form-control">
+                            <option value="">-- Select Semester --</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                        <div id="semesterErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <!-- Empty column for alignment -->
+                    </div>
+                </div>
+                
+                <!-- Row 4: Rooms (full width) -->
+                <div class="form-group">
+                    <label for="rooms" class="form-label">Rooms *</label>
+                    <select id="rooms" class="form-control" multiple>
+                        <!-- Options loaded dynamically -->
+                    </select>
+                    <div id="roomsErr" class="error-text"></div>
+                </div>
+                
+                <!-- Help text row -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <small style="color: #6b7280; font-size: 12px; display: block;">
+                            📌 Hold <strong>Ctrl/Cmd</strong> to select multiple departments
+                        </small>
+                    </div>
+                    <div class="form-col">
+                        <small style="color: #6b7280; font-size: 12px; display: block;">
+                            📌 Hold <strong>Ctrl/Cmd</strong> to select multiple rooms
+                        </small>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="SeatingManager.closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="SeatingManager.saveSeating()" id="saveBtn">
+                    Generate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal - Enhanced -->
+    <div class="modal" id="deleteConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="delete-icon">🪑</div>
+            <div class="delete-title">Confirm Delete Seating</div>
+            <div class="delete-message">
+                Are you sure you want to delete this seating arrangement?<br>
+                This action <span class="highlight">cannot be undone</span> and all associated data will be permanently removed.
+            </div>
+            <div class="delete-actions">
+                <button class="btn btn-cancel" onclick="SeatingManager.closeDeleteConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-delete" onclick="SeatingManager.confirmDelete()">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hall Ticket Confirmation Modal - Enhanced -->
+    <div class="modal" id="hallticketModal" role="dialog" aria-modal="true" aria-labelledby="hallticketModalTitle">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="hallticket-icon">🎫</div>
+            <div class="hallticket-title">Generate Hall Tickets</div>
+            <div class="hallticket-message">
+                This will generate hall tickets in the database for all students in this exam.<br>
+                <span class="highlight">Exam:</span> <span id="modalExamName">Loading...</span><br>
+                This process may take a moment depending on the number of students.
+            </div>
+            <div class="hallticket-actions">
+                <button class="btn btn-cancel" onclick="SeatingManager.closeHallticketModal()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-hallticket" onclick="SeatingManager.confirmGenerateHallTickets()" id="confirmHallticketBtn">
+                    🎫 Generate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal - Enhanced -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn btn-cancel" onclick="SeatingManager.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-logout" onclick="SeatingManager.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 Exam Seating Arrangement System
+    </footer>
+
+    <script>
+        // Configuration
+        const Config = {
+            SEATING_API: "/api/admin/seating",
+            EXAM_API: "/api/admin/exams",
+            ROOM_API: "/api/admin/rooms",
+            STUDENT_API: "/api/admin",
+            HALLTICKET_API: "/api/hall-tickets",
+            TOAST_DURATION: 3500,
+            DEFAULT_ROWS_PER_PAGE: 10
+        };
+
+        // Toast Notification Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, Config.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+            static hallticket(message) { this.show("hallticket", message); }
+        }
+
+        // Modal Manager
+        class ModalManager {
+            static open(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    modal.removeAttribute("aria-hidden");
+                    document.body.style.overflow = "hidden";
+                }
+            }
+            
+            static close(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                }
+            }
+        }
+
+        // Form Helper Functions
+        class FormHelper {
+            static getSelectedValues(selectId) {
+                const select = document.getElementById(selectId);
+                return Array.from(select.selectedOptions).map(option => option.value);
+            }
+            
+            static setSelectedValues(selectId, values) {
+                const select = document.getElementById(selectId);
+                const valuesArray = Array.isArray(values) ? values : values.split(',');
+                Array.from(select.options).forEach(option => {
+                    option.selected = valuesArray.includes(option.value);
+                });
+            }
+            
+            static formatRooms(roomsStr, roomMap) {
+                if (!roomsStr) return "";
+                return roomsStr
+                    .split(",")
+                    .map(roomCode => roomMap[roomCode] || roomCode)
+                    .join(", ");
+            }
+        }
+
+        // Seating Management Main Class
+        class SeatingManager {
+            static seatingData = [];
+            static filteredData = [];
+            static examMap = {};
+            static roomMap = {};
+            static currentPage = 1;
+            static rowsPerPage = Config.DEFAULT_ROWS_PER_PAGE;
+            static editId = null;
+            static deleteId = null;
+            static selectedExamId = null;
+            static selectedRowIndex = null;
+            static progressInterval = null;
+            static currentModalItem = null;
+            static lastGeneratedHallTicketsId = null;
+            
+            // Semester options mapping
+            static semesterOptions = {
+                "1": ["1", "2"],
+                "2": ["3", "4"],
+                "3": ["5", "6"],
+                "4": ["7", "8"]
+            };
+            
+            static async init() {
+                await this.loadExams();
+                await this.loadRooms();
+                await this.loadSeating();
+                this.setupEventListeners();
+            }
+            
+            static async loadSeating() {
+                try {
+                    const response = await fetch(Config.SEATING_API);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.seatingData = await response.json();
+                    this.filteredData = [...this.seatingData];
+                    this.currentPage = 1;
+                    this.renderTable();
+                } catch (error) {
+                    console.error("Failed to load seating:", error);
+                    ToastManager.error("Failed to load seating arrangements.");
+                }
+            }
+            
+            static renderTable() {
+                const tbody = document.getElementById("seatingBody");
+                if (!tbody) return;
+                
+                const start = (this.currentPage - 1) * this.rowsPerPage;
+                const end = start + this.rowsPerPage;
+                const pageData = this.filteredData.slice(start, end);
+                
+                if (pageData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #6b7280; padding: 20px;">
+                                No seating arrangements found. Click "Generate Seating" to create one.
+                            </td>
+                        </tr>
+                    `;
+                    this.updatePaginationInfo();
+                    return;
+                }
+                
+                tbody.innerHTML = pageData.map((item, index) => {
+                    const examId = item.examId;
+                    const examName = this.examMap[examId] || item.examName || `Exam ID: ${examId}`;
+                    
+                    // Check if hall tickets are generated
+                    let hallTicketsGenerated = false;
+                    const hallTicketKey = Object.keys(item).find(key => 
+                        key.toLowerCase().includes('hall') && 
+                        key.toLowerCase().includes('ticket')
+                    );
+                    
+                    if (hallTicketKey) {
+                        const value = item[hallTicketKey];
+                        if (typeof value === 'boolean') {
+                            hallTicketsGenerated = value;
+                        } else if (typeof value === 'string') {
+                            hallTicketsGenerated = value.toLowerCase() === 'true';
+                        } else if (typeof value === 'number') {
+                            hallTicketsGenerated = value === 1;
+                        }
+                    } else if (item.hallTicketsGenerated !== undefined) {
+                        const value = item.hallTicketsGenerated;
+                        if (typeof value === 'boolean') {
+                            hallTicketsGenerated = value;
+                        } else if (typeof value === 'string') {
+                            hallTicketsGenerated = value.toLowerCase() === 'true';
+                        } else if (typeof value === 'number') {
+                            hallTicketsGenerated = value === 1;
+                        }
+                    }
+                    
+                    // Check if this is the item we just generated hall tickets for
+                    if (this.lastGeneratedHallTicketsId === item.id) {
+                        hallTicketsGenerated = true;
+                    }
+                    
+                    const isDeleted = item.isDeleted || item.deleted || false;
+                    const canEdit = !hallTicketsGenerated && !isDeleted;
+                    
+                    // Status badge
+                    let statusClass = 'status-default';
+                    let statusText = item.status || 'Generated';
+                    
+                    if (isDeleted) {
+                        statusClass = 'status-deleted';
+                        statusText = 'Deleted';
+                    } else if (item.status === 'Generated' || item.status === 'Updated') {
+                        statusClass = 'status-generated';
+                        statusText = item.status;
+                    } else if (item.status === 'Pending') {
+                        statusClass = 'status-pending';
+                        statusText = 'Pending';
+                    }
+                    
+                    // Edit button
+                    let editButtonHtml = '';
+                    if (canEdit) {
+                        editButtonHtml = `
+                            <button class="btn btn-info action-btn" 
+                                    onclick="SeatingManager.editSeating(${item.id})"
+                                    title="Edit seating arrangement">
+                                ✏️ Edit
+                            </button>
+                        `;
+                    } else {
+                        let disableReason = '';
+                        let buttonText = 'Edit';
+                        
+                        if (isDeleted) {
+                            disableReason = 'Cannot edit - Deleted';
+                            buttonText = 'Deleted';
+                        } else if (hallTicketsGenerated) {
+                            disableReason = 'Cannot edit - Hall tickets already generated';
+                            buttonText = 'Locked';
+                        }
+                        
+                        editButtonHtml = `
+                            <button class="btn btn-disabled action-btn" 
+                                    disabled
+                                    title="${disableReason}">
+                                ${buttonText}
+                            </button>
+                        `;
+                    }
+                    
+                    // Delete button
+                    const deleteButtonHtml = isDeleted 
+                        ? `<button class="btn btn-disabled action-btn" 
+                                   disabled
+                                   title="Already deleted">
+                              Deleted
+                           </button>`
+                        : `<button class="btn btn-danger action-btn" 
+                                   onclick="SeatingManager.deleteSeating(${item.id})"
+                                   title="Delete seating arrangement">
+                              🗑️ Delete
+                           </button>`;
+                    
+                    // Hall ticket button
+                    let hallTicketButtonHtml = '';
+                    if (isDeleted) {
+                        hallTicketButtonHtml = `<button class="btn btn-disabled action-btn" 
+                                                        disabled
+                                                        title="Cannot generate - Deleted">
+                                                    🎫 Deleted
+                                                </button>`;
+                    } else if (hallTicketsGenerated) {
+                        hallTicketButtonHtml = `<button class="btn btn-hallticket action-btn" 
+                                                        disabled
+                                                        style="opacity: 0.7; cursor: not-allowed;"
+                                                        title="Hall tickets already generated">
+                                                    🎫 Generated
+                                                </button>`;
+                    } else {
+                        hallTicketButtonHtml = `<button class="btn btn-hallticket action-btn" 
+                                                        onclick="SeatingManager.openHallticketModal(${start + index})"
+                                                        title="Generate Hall Tickets in Database">
+                                                    🎫 Generate
+                                                </button>`;
+                    }
+                    
+                    return `
+                    <tr>
+                        <td><strong>${examName}</strong></td>
+                        <td>${item.departments || '-'}</td>
+                        <td>${item.year || '-'}</td>
+                        <td>${item.semester ? item.semester : '-'}</td>
+                        <td>${FormHelper.formatRooms(item.rooms, this.roomMap)}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>
+                        <td>
+                            ${hallTicketButtonHtml}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                ${editButtonHtml}
+                                ${deleteButtonHtml}
+                            </div>
+                        </td>
+                    </tr>
+                    `;
+                }).join("");
+                
+                this.updatePaginationInfo();
+            }
+            
+            static updatePaginationInfo() {
+                const total = this.filteredData.length;
+                const start = (this.currentPage - 1) * this.rowsPerPage + 1;
+                const end = Math.min(this.currentPage * this.rowsPerPage, total);
+                const totalPages = Math.ceil(total / this.rowsPerPage);
+                
+                document.getElementById("startRow").textContent = total === 0 ? 0 : start;
+                document.getElementById("endRow").textContent = end;
+                document.getElementById("totalRows").textContent = total;
+                document.getElementById("pageInfo").textContent = `Page ${this.currentPage} of ${totalPages || 1}`;
+                
+                document.getElementById("prevBtn").disabled = this.currentPage === 1;
+                document.getElementById("nextBtn").disabled = this.currentPage === totalPages || totalPages === 0;
+            }
+            
+            static searchTable() {
+                const query = document.getElementById("searchInput").value.toLowerCase().trim();
+                
+                this.filteredData = this.seatingData.filter(item => {
+                    const examText = (this.examMap[item.examId] || item.examName || item.examId || "").toString().toLowerCase();
+                    const departments = (item.departments || "").toLowerCase();
+                    const year = String(item.year || "");
+                    const semester = String(item.semester || "");
+                    const roomsText = FormHelper.formatRooms(item.rooms, this.roomMap).toLowerCase();
+                    const status = (item.isDeleted ? 'deleted' : item.status || "").toLowerCase();
+                    
+                    return (
+                        examText.includes(query) ||
+                        departments.includes(query) ||
+                        year.includes(query) ||
+                        semester.includes(query) ||
+                        roomsText.includes(query) ||
+                        status.includes(query)
+                    );
+                });
+                
+                this.currentPage = 1;
+                this.renderTable();
+            }
+            
+            static changePageSize() {
+                this.rowsPerPage = parseInt(document.getElementById("pageSize").value);
+                this.currentPage = 1;
+                this.renderTable();
+            }
+            
+            static nextPage() {
+                const totalPages = Math.ceil(this.filteredData.length / this.rowsPerPage);
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.renderTable();
+                }
+            }
+            
+            static prevPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.renderTable();
+                }
+            }
+            
+            static async loadExams() {
+                try {
+                    const response = await fetch(Config.EXAM_API);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const exams = await response.json();
+                    const examSelect = document.getElementById("examId");
+                    examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
+                    
+                    exams.forEach(exam => {
+                        if (!exam.isDeleted) {
+                            const displayText = `${exam.examName} (${exam.examCode})`;
+                            this.examMap[exam.id] = displayText;
+                            examSelect.innerHTML += `<option value="${exam.id}">${displayText}</option>`;
+                        }
+                    });
+                } catch (error) {
+                    console.error("Failed to load exams:", error);
+                }
+            }
+            
+            static async loadRooms() {
+                try {
+                    const response = await fetch(Config.ROOM_API);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const rooms = await response.json();
+                    const roomSelect = document.getElementById("rooms");
+                    roomSelect.innerHTML = '';
+                    
+                    rooms.forEach(room => {
+                        if (!room.isDeleted) {
+                            const displayText = `${room.roomCode} - ${room.roomName} (Capacity: ${room.capacity})`;
+                            this.roomMap[room.roomCode] = displayText;
+                            roomSelect.innerHTML += `<option value="${room.roomCode}">${displayText}</option>`;
+                        }
+                    });
+                } catch (error) {
+                    console.error("Failed to load rooms:", error);
+                }
+            }
+            
+            static async loadDepartments() {
+                try {
+                    const response = await fetch(`${Config.STUDENT_API}/departments`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const departments = await response.json();
+                    const deptSelect = document.getElementById("departments");
+                    deptSelect.innerHTML = '';
+                    
+                    departments.forEach(dept => {
+                        deptSelect.innerHTML += `<option value="${dept}">${dept}</option>`;
+                    });
+                } catch (error) {
+                    console.error("Failed to load departments:", error);
+                }
+            }
+            
+            static openHallticketModal(rowIndex) {
+                try {
+                    const item = this.filteredData[rowIndex];
+                    if (!item) {
+                        ToastManager.error("Cannot find seating arrangement.");
+                        return;
+                    }
+                    
+                    // Check if hall tickets already generated
+                    let hallTicketsGenerated = false;
+                    const hallTicketKey = Object.keys(item).find(key => 
+                        key.toLowerCase().includes('hall') && 
+                        key.toLowerCase().includes('ticket')
+                    );
+                    
+                    if (hallTicketKey) {
+                        const value = item[hallTicketKey];
+                        if (typeof value === 'boolean') {
+                            hallTicketsGenerated = value;
+                        } else if (typeof value === 'string') {
+                            hallTicketsGenerated = value.toLowerCase() === 'true';
+                        } else if (typeof value === 'number') {
+                            hallTicketsGenerated = value === 1;
+                        }
+                    }
+                    
+                    if (hallTicketsGenerated) {
+                        ToastManager.error("Hall tickets have already been generated for this exam.");
+                        return;
+                    }
+                    
+                    this.currentModalItem = item;
+                    this.selectedRowIndex = rowIndex;
+                    
+                    const examId = item.examId;
+                    const examName = this.examMap[examId] || item.examName || `Exam ID: ${examId}`;
+                    
+                    // Update modal content with safety checks
+                    const examNameElement = document.getElementById("modalExamName");
+                    const modalTitleElement = document.getElementById("hallticketModalTitle");
+                    
+                    if (examNameElement) {
+                        examNameElement.textContent = examName;
+                    } else {
+                        console.warn("Element #modalExamName not found");
+                    }
+                    
+                    if (modalTitleElement) {
+                        modalTitleElement.textContent = `Generate Hall Tickets - ${examName}`;
+                    } else {
+                        console.warn("Element #hallticketModalTitle not found");
+                    }
+                    
+                    ModalManager.open("hallticketModal");
+                    
+                } catch (error) {
+                    console.error("Error opening hall ticket modal:", error);
+                    ToastManager.error("Failed to open hall ticket modal. Please try again.");
+                }
+            }
+            
+            static closeHallticketModal() {
+                ModalManager.close("hallticketModal");
+                this.currentModalItem = null;
+                this.selectedRowIndex = null;
+            }
+            
+            static async confirmGenerateHallTickets() {
+                if (!this.currentModalItem) {
+                    ToastManager.error("No exam selected for hall ticket generation.");
+                    return;
+                }
+                
+                const examId = this.currentModalItem.examId;
+                if (!examId) {
+                    ToastManager.error("Invalid exam ID.");
+                    return;
+                }
+                
+                const examName = this.examMap[examId] || `Exam ID: ${examId}`;
+                if (!confirm(`Generate hall tickets for "${examName}"? This may take a moment.`)) {
+                    return;
+                }
+                
+                this.closeHallticketModal();
+                await this.generateHallTickets(examId);
+            }
+            
+            static async generateHallTickets(examId) {
+                if (!examId) {
+                    ToastManager.error("Invalid exam ID provided for hall ticket generation.");
+                    return;
+                }
+                
+                this.showProgressBar("Generating hall tickets...");
+                
+                try {
+                    const response = await fetch(`${Config.HALLTICKET_API}/generate/${examId}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    this.hideProgressBar();
+                    
+                    if (result.success) {
+                        ToastManager.success(result.message || "Hall tickets generated successfully!");
+                        await this.loadSeating();
+                        ToastManager.success("Hall tickets generated successfully! The table has been updated.");
+                    } else {
+                        ToastManager.error(result.message || "Failed to generate hall tickets");
+                    }
+                    
+                } catch (error) {
+                    this.hideProgressBar();
+                    console.error("Failed to generate hall tickets:", error);
+                    ToastManager.error(error.message || "Failed to generate hall tickets");
+                }
+            }
+            
+            static showProgressBar(message = "Processing...") {
+                const progressContainer = document.getElementById("progressContainer");
+                const progressFill = document.getElementById("progressFill");
+                const progressText = document.getElementById("progressText");
+                
+                progressContainer.style.display = "block";
+                progressFill.style.width = "30%";
+                progressText.textContent = message;
+                
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                }
+                
+                let progress = 30;
+                this.progressInterval = setInterval(() => {
+                    progress += 5;
+                    if (progress > 90) {
+                        clearInterval(this.progressInterval);
+                        progressFill.style.width = "90%";
+                    } else {
+                        progressFill.style.width = progress + "%";
+                    }
+                }, 500);
+            }
+            
+            static hideProgressBar() {
+                const progressContainer = document.getElementById("progressContainer");
+                const progressFill = document.getElementById("progressFill");
+                const progressText = document.getElementById("progressText");
+                
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                    this.progressInterval = null;
+                }
+                
+                progressFill.style.width = "100%";
+                progressText.textContent = "Completed!";
+                
+                setTimeout(() => {
+                    progressContainer.style.display = "none";
+                    progressFill.style.width = "0%";
+                    progressText.textContent = "Processing...";
+                }, 1000);
+            }
+            
+            static onYearChange() {
+                const yearSelect = document.getElementById("year");
+                
+                if (yearSelect.disabled) return;
+                
+                const year = yearSelect.value;
+                const semesterSelect = document.getElementById("semester");
+                semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+                
+                if (year && this.semesterOptions[year]) {
+                    this.semesterOptions[year].forEach(sem => {
+                        semesterSelect.innerHTML += `<option value="${sem}">Semester ${sem}</option>`;
+                    });
+                }
+            }
+            
+            static async openGenerateModal() {
+                this.editId = null;
+                document.getElementById("modalTitle").textContent = "Generate Seating";
+                document.getElementById("saveBtn").textContent = "Generate";
+                document.getElementById("seatingId").value = "";
+                document.getElementById("seatingForm").reset();
+                
+                // Enable all fields (for new creation)
+                document.getElementById("examId").disabled = false;
+                document.getElementById("year").disabled = false;
+                document.getElementById("semester").disabled = false;
+                document.getElementById("departments").disabled = false;
+                document.getElementById("rooms").disabled = false;
+                
+                // Reset semester dropdown
+                document.getElementById("semester").innerHTML = '<option value="">-- Select Semester --</option>';
+                
+                await this.loadDepartments();
+                
+                ModalManager.open("generateModal");
+            }
+            
+            static async editSeating(id) {
+                try {
+                    const item = this.seatingData.find(s => s.id === id);
+                    
+                    if (!item) {
+                        ToastManager.error("Seating arrangement not found.");
+                        return;
+                    }
+                    
+                    let hallTicketsGenerated = false;
+                    const hallTicketKey = Object.keys(item).find(key => 
+                        key.toLowerCase().includes('hall') && 
+                        key.toLowerCase().includes('ticket')
+                    );
+                    
+                    if (hallTicketKey) {
+                        const value = item[hallTicketKey];
+                        if (typeof value === 'boolean') {
+                            hallTicketsGenerated = value;
+                        } else if (typeof value === 'string') {
+                            hallTicketsGenerated = value.toLowerCase() === 'true';
+                        } else if (typeof value === 'number') {
+                            hallTicketsGenerated = value === 1;
+                        }
+                    }
+                    
+                    if (hallTicketsGenerated) {
+                        ToastManager.error(
+                            "Cannot edit seating arrangement. Hall tickets have already been generated."
+                        );
+                        return;
+                    }
+                    
+                    const isDeleted = item.isDeleted || item.deleted || false;
+                    if (isDeleted) {
+                        ToastManager.error("Cannot edit seating arrangement. It has been deleted.");
+                        return;
+                    }
+                    
+                    const response = await fetch(`${Config.SEATING_API}/${id}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const seating = await response.json();
+                    this.editId = id;
+                    
+                    document.getElementById("modalTitle").textContent = "Edit Seating";
+                    document.getElementById("saveBtn").textContent = "Update";
+                    document.getElementById("seatingId").value = seating.id;
+                    
+                    await this.loadDepartments();
+                    
+                    // Set values
+                    document.getElementById("examId").value = seating.examId || "";
+                    FormHelper.setSelectedValues("departments", seating.departments ? seating.departments.split(",") : []);
+                    document.getElementById("year").value = seating.year || "";
+                    
+                    // Populate semester based on year
+                    if (seating.year) {
+                        this.onYearChange();
+                        document.getElementById("semester").value = seating.semester || "";
+                    }
+                    
+                    FormHelper.setSelectedValues("rooms", seating.rooms ? seating.rooms.split(",") : []);
+                    
+                    // DISABLE specific fields for edit mode
+                    document.getElementById("examId").disabled = true;
+                    document.getElementById("year").disabled = true;
+                    document.getElementById("semester").disabled = true;
+                    
+                    // Keep departments and rooms enabled for editing
+                    document.getElementById("departments").disabled = false;
+                    document.getElementById("rooms").disabled = false;
+                    
+                    // Add note about disabled fields
+                    const noteElement = document.createElement('small');
+                    noteElement.style.cssText = 'color: #6b7280; font-size: 12px; display: block; margin-top: 5px;';
+                    noteElement.textContent = '📌 Note: Exam, Year, and Semester cannot be changed in edit mode.';
+                    
+                    // Remove existing note if any
+                    const existingNote = document.querySelector('#generateModal .form-group small');
+                    if (existingNote) existingNote.remove();
+                    
+                    // Add note after the form
+                    const form = document.getElementById('seatingForm');
+                    form.parentNode.insertBefore(noteElement, form.nextSibling);
+                    
+                    ModalManager.open("generateModal");
+                } catch (error) {
+                    console.error("Failed to load seating:", error);
+                    ToastManager.error("Failed to load seating details.");
+                }
+            }
+            
+            static validateSeating() {
+                let isValid = true;
+                
+                document.querySelectorAll(".error-text").forEach(el => {
+                    el.style.display = "none";
+                });
+                
+                if (!document.getElementById("examId").value) {
+                    document.getElementById("examIdErr").textContent = "Exam is required";
+                    document.getElementById("examIdErr").style.display = "block";
+                    isValid = false;
+                }
+                
+                const departments = FormHelper.getSelectedValues("departments");
+                if (departments.length === 0) {
+                    document.getElementById("departmentsErr").textContent = "At least one department is required";
+                    document.getElementById("departmentsErr").style.display = "block";
+                    isValid = false;
+                }
+                
+                if (!document.getElementById("year").value) {
+                    document.getElementById("yearErr").textContent = "Year is required";
+                    document.getElementById("yearErr").style.display = "block";
+                    isValid = false;
+                }
+                
+                if (!document.getElementById("semester").value) {
+                    document.getElementById("semesterErr").textContent = "Semester is required";
+                    document.getElementById("semesterErr").style.display = "block";
+                    isValid = false;
+                }
+                
+                const rooms = FormHelper.getSelectedValues("rooms");
+                if (rooms.length === 0) {
+                    document.getElementById("roomsErr").textContent = "At least one room is required";
+                    document.getElementById("roomsErr").style.display = "block";
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            static async saveSeating() {
+                if (!this.validateSeating()) {
+                    ToastManager.warning("Please fix the validation errors.");
+                    return;
+                }
+
+                const payload = {
+                    examId: parseInt(document.getElementById("examId").value),
+                    departments: FormHelper.getSelectedValues("departments").join(","),
+                    year: parseInt(document.getElementById("year").value),
+                    semester: parseInt(document.getElementById("semester").value),
+                    rooms: FormHelper.getSelectedValues("rooms").join(","),
+                    hallTicketsGenerated: false
+                };
+
+                if (this.editId) {
+                    payload.id = this.editId;
+                    const currentItem = this.seatingData.find(s => s.id === this.editId);
+                    if (currentItem) {
+                        const hallTicketKey = Object.keys(currentItem).find(key => 
+                            key.toLowerCase().includes('hall') && 
+                            key.toLowerCase().includes('ticket')
+                        );
+                        if (hallTicketKey) {
+                            payload.hallTicketsGenerated = currentItem[hallTicketKey] || false;
+                        }
+                    }
+                }
+
+                try {
+                    let url, method;
+                    
+                    if (this.editId) {
+                        url = `${Config.SEATING_API}/${this.editId}`;
+                        method = "PUT";
+                    } else {
+                        url = `${Config.SEATING_API}/generate`;
+                        method = "POST";
+                    }
+
+                    this.showProgressBar(this.editId ? "Updating seating..." : "Generating seating...");
+                    
+                    const response = await fetch(url, {
+                        method,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    
+                    this.hideProgressBar();
+
+                    if (!response.ok) {
+                        if (result.code === 'HALL_TICKETS_EXIST') {
+                            ToastManager.error(result.message);
+                        } else {
+                            ToastManager.error(result.message || "Failed to save seating arrangement");
+                        }
+                        this.closeModal();
+                        return;
+                    }
+
+                    this.closeModal();
+                    await this.loadSeating();
+                    
+                    ToastManager.success(
+                        this.editId 
+                            ? "Seating arrangement updated successfully!" 
+                            : "Seating arrangement generated successfully!"
+                    );
+                } catch (error) {
+                    this.hideProgressBar();
+                    console.error("Failed to save seating:", error);
+                    ToastManager.error("Failed to save seating arrangement.");
+                }
+            }
+            
+            static deleteSeating(id) {
+                this.deleteId = id;
+                ModalManager.open("deleteConfirmModal");
+            }
+            
+            static async confirmDelete() {
+                try {
+                    const response = await fetch(`${Config.SEATING_API}/${this.deleteId}`, {
+                        method: "DELETE"
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.closeDeleteConfirm();
+                    await this.loadSeating();
+                    
+                    ToastManager.success("Seating arrangement deleted successfully!");
+                } catch (error) {
+                    console.error("Failed to delete seating:", error);
+                    ToastManager.error("Failed to delete seating arrangement.");
+                }
+            }
+            
+            static closeModal() {
+                ModalManager.close("generateModal");
+                document.getElementById("seatingForm").reset();
+                
+                // Re-enable all fields when closing modal
+                const fieldsToEnable = ["examId", "year", "semester", "departments", "rooms"];
+                fieldsToEnable.forEach(fieldId => {
+                    document.getElementById(fieldId).disabled = false;
+                });
+                
+                // Remove any added notes
+                const noteElements = document.querySelectorAll('#generateModal small');
+                noteElements.forEach(note => {
+                    if (note.textContent.includes('cannot be changed')) {
+                        note.remove();
+                    }
+                });
+            }
+            
+            static closeDeleteConfirm() {
+                ModalManager.close("deleteConfirmModal");
+                this.deleteId = null;
+            }
+            
+            static openLogoutConfirm() {
+                ModalManager.open("logoutConfirmModal");
+            }
+            
+            static closeLogoutConfirm() {
+                ModalManager.close("logoutConfirmModal");
+            }
+            
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+            
+            static setupEventListeners() {
+                document.getElementById("searchInput").addEventListener("keypress", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.searchTable();
+                    }
+                });
+                
+                document.addEventListener("keydown", (event) => {
+                    if ((event.ctrlKey || event.metaKey) && event.key === 'g') {
+                        event.preventDefault();
+                        this.openGenerateModal();
+                    }
+                    
+                    if (event.key === 'Escape') {
+                        ModalManager.close("generateModal");
+                        ModalManager.close("deleteConfirmModal");
+                        ModalManager.close("hallticketModal");
+                        ModalManager.close("logoutConfirmModal");
+                    }
+                });
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            SeatingManager.init();
+        });
+
+        // Make manager accessible globally
+        window.SeatingManager = SeatingManager;
+    </script>
+</body>
+</html>

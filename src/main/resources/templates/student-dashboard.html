@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <!-- Add jsPDF library for client-side PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        button, select {
+            cursor: pointer;
+        }
+
+        /* ===== Common Components ===== */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 90%;
+            width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #0f4c75;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        /* Download button specific styles */
+        .download-btn {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .download-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #0f4c75, #3282b8);
+            color: #fff;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, .2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h3 {
+            color: #0f4c75;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Action Buttons ===== */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 4px;
+        }
+
+        /* ===== Card Header ===== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            color: #0f4c75;
+            font-size: 1.5rem;
+        }
+
+        /* ===== Stats Grid ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0f4c75;
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            color: #059669;
+            font-weight: 500;
+        }
+
+        .stat-change.negative {
+            color: #dc2626;
+        }
+
+        /* ===== Exams Grid ===== */
+        .exams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .exam-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .exam-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .exam-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .exam-title {
+            font-weight: 600;
+            color: #0f4c75;
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .exam-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .status-current {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-upcoming {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-completed {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .exam-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .exam-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .exam-action-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: none;
+            background: #f8f9fa;
+            color: #4b5563;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .exam-action-btn:hover {
+            background: #e5e7eb;
+            color: #0f4c75;
+            transform: translateY(-1px);
+        }
+
+        .exam-card.current {
+            border-left: 4px solid #007bff;
+        }
+
+        .exam-card.upcoming {
+            border-left: 4px solid #28a745;
+        }
+
+        .exam-card.completed {
+            border-left: 4px solid #6c757d;
+        }
+
+        /* ===== Hall Ticket Modal Content ===== */
+        .hallticket-modal {
+            background: white;
+            border: 2px solid #0f4c75;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .hallticket-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #0f4c75;
+        }
+
+        .hallticket-header h3 {
+            color: #0f4c75;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .hallticket-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .hallticket-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+            border: 1px solid #e9ecef;
+        }
+
+        .hallticket-item strong {
+            color: #0f4c75;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .hallticket-qr {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .hallticket-instructions {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .hallticket-instructions h4 {
+            color: #0f4c75;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hallticket-instructions ul {
+            padding-left: 20px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .hallticket-instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        /* Subject schedule in hall ticket */
+        .subject-schedule {
+            grid-column: 1 / -1;
+            background: #e8f4fd;
+            border-color: #0f4c75;
+            padding: 15px;
+        }
+
+        .subject-schedule strong {
+            font-size: 15px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .subject-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .subject-table th {
+            background: #0f4c75;
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .subject-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .subject-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .subject-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .subject-table .sign-cell {
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .subject-table .sign-line {
+            display: inline-block;
+            width: 80px;
+            border-bottom: 1px solid #999;
+            margin: 0 5px;
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* ===== Alert Box ===== */
+        .alert {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            color: #856404;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== User Menu in Header ===== */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0f4c75, #3282b8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* ===== Logout Modal Styles ===== */
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Print Styles for Hall Ticket ===== */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .hallticket-modal, .hallticket-modal * {
+                visibility: visible;
+            }
+            .hallticket-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none;
+                box-shadow: none;
+            }
+            .modal-actions {
+                display: none !important;
+            }
+            .subject-table th {
+                background: #0f4c75 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .subject-table tr:nth-child(even) {
+                background: #f8f9fa !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 420px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .exams-grid {
+                grid-template-columns: 1fr;
+            }
+            .hallticket-info {
+                grid-template-columns: 1fr;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+            .subject-table {
+                font-size: 11px;
+            }
+            .subject-table th, .subject-table td {
+                padding: 6px 4px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+            .card-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .exams-grid {
+                grid-template-columns: 1fr;
+            }
+            .exam-details {
+                grid-template-columns: 1fr;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+            .hallticket-info {
+                grid-template-columns: 1fr;
+            }
+            .modal-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            .modal-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .subject-table {
+                font-size: 10px;
+            }
+            .subject-table th, .subject-table td {
+                padding: 4px 2px;
+            }
+            .subject-table .sign-line {
+                width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation">
+        <h2>Student Portal</h2>
+        <a href="/student-dashboard" class="active">🏠 Dashboard</a>
+        <a href="/student-profile">👤 My Profile</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h3>Student Dashboard</h3>
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar">JD</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">John Doe</div>
+                    <div class="user-role">Student</div>
+                </div>
+                <button type="button" class="btn btn-danger" onclick="StudentDashboard.openLogoutConfirm()">
+                    🚪 Logout
+                </button>
+            </div>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Welcome Section -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Welcome, <span id="studentName">Student</span>!</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-info" onclick="StudentDashboard.refreshDashboard()">
+                        🔄 Refresh
+                    </button>
+                    <span id="currentTime" style="font-size: 14px; color: #666; padding: 7px 0;"></span>
+                </div>
+            </div>
+            
+            <p>Welcome to your student portal. View your hall tickets and check exam schedules.</p>
+        </section>
+
+        <!-- Stats Overview -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Your Academic Overview</h2>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">📝</span>
+                    <div class="stat-label">Total Exams</div>
+                    <div class="stat-value" id="totalExams">0</div>
+                    <div class="stat-change positive" id="examsChange">This semester</div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-icon">📋</span>
+                    <div class="stat-label">Hall Tickets</div>
+                    <div class="stat-value" id="hallTicketsCount">0</div>
+                    <div class="stat-change positive" id="ticketsChange">Available</div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-icon">📅</span>
+                    <div class="stat-label">Upcoming Exams</div>
+                    <div class="stat-value" id="upcomingExamsCount">0</div>
+                    <div class="stat-change positive" id="upcomingChange">Next 7 days</div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-icon">✅</span>
+                    <div class="stat-label">Completed Exams</div>
+                    <div class="stat-value" id="completedExamsCount">0</div>
+                    <div class="stat-change positive" id="completedChange">This semester</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Hall Tickets -->
+        <section class="card">
+            <div class="card-header">
+                <h2>🎫 Your Hall Tickets</h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="lastUpdated" style="font-size: 13px; color: #6b7280;">Updated: Just now</span>
+                </div>
+            </div>
+            
+            <div class="exams-grid" id="hallTicketsGrid">
+                <!-- Hall tickets will be loaded here -->
+                <div class="exam-card">
+                    <div class="exam-header">
+                        <div class="exam-title">Loading hall tickets...</div>
+                        <div class="exam-status status-upcoming">Loading</div>
+                    </div>
+                    <div class="exam-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Subjects</span>
+                            <span class="detail-value">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Exam Period</span>
+                            <span class="detail-value">-</span>
+                        </div>
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <span class="detail-label">Subject Timings</span>
+                            <span class="detail-value">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Room</span>
+                            <span class="detail-value">-</span>
+                        </div>
+                    </div>
+                    <div class="exam-actions">
+                        <button class="exam-action-btn" onclick="StudentDashboard.viewHallTicket('')">
+                            👁️ View
+                        </button>
+                        <button class="exam-action-btn download-btn" onclick="StudentDashboard.downloadHallTicketPdf('', this)">
+                            <span class="btn-text">📥 Download</span>
+                            <span class="download-spinner" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Current Exams -->
+        <section class="card">
+            <div class="card-header">
+                <h2>📚 Current Exams (Today)</h2>
+                <span class="btn btn-primary" id="currentExamCount">0 Exams</span>
+            </div>
+            
+            <div class="exams-grid" id="currentExamsGrid">
+                <!-- Current exams will be loaded here -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">📚</div>
+                    <h3>No current exams</h3>
+                    <p>You don't have any exams scheduled for today.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upcoming Exams -->
+        <section class="card">
+            <div class="card-header">
+                <h2>📅 Upcoming Exams (Next 7 Days)</h2>
+                <span class="btn btn-success" id="upcomingExamCount">0 Exams</span>
+            </div>
+            
+            <div class="exams-grid" id="upcomingExamsGrid">
+                <!-- Upcoming exams will be loaded here -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">📅</div>
+                    <h3>No upcoming exams</h3>
+                    <p>You don't have any upcoming exams in the next 7 days.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Important Notice -->
+        <section class="card">
+            <div class="card-header">
+                <h2>📢 Important Notice</h2>
+            </div>
+            
+            <div id="importantNotice">
+                <p><strong>Exam Guidelines:</strong></p>
+                <ul style="margin-left: 20px; color: #666; margin-top: 10px;">
+                    <li>Carry your hall ticket and valid ID card to the examination hall</li>
+                    <li>Report to the exam center 30 minutes before the scheduled time</li>
+                    <li>No electronic devices allowed inside the examination hall</li>
+                    <li>Follow all invigilator instructions during the exam</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Alert Section -->
+        <div id="alertBox" class="alert hidden">
+            ⚠ You have exams scheduled for today! Please check your hall tickets.
+        </div>
+    </main>
+
+    <!-- Hall Ticket Modal -->
+    <div class="modal" id="hallTicketModal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div id="hallTicketContent" class="hallticket-modal">
+                <!-- Hall ticket content will be loaded here -->
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="StudentDashboard.closeHallTicket()">
+                    ✕ Close
+                </button>
+                <button class="btn btn-primary" onclick="StudentDashboard.printHallTicket()">
+                    🖨️ Print
+                </button>
+                <button class="btn btn-success download-btn" id="modalDownloadBtn" 
+                        onclick="StudentDashboard.downloadHallTicketPdfFromModal(this)">
+                    <span class="btn-text">📥 Download PDF</span>
+                    <span class="download-spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal - Enhanced -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn btn-cancel" onclick="StudentDashboard.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-logout" onclick="StudentDashboard.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 University Examination System | Student Portal
+    </footer>
+
+    <script>
+        // Configuration - Updated to match backend endpoints
+        const StudentConfig = {
+            API_DASHBOARD: "/api/student/dashboard",
+            API_HALLTICKETS: "/api/student/hall-tickets",
+            API_PROFILE: "/api/student/profile",
+            API_HALLTICKET: "/api/student/hallticket",
+            API_HALLTICKET_BY_EXAM: "/api/student/hallticket/",
+            API_HALLTICKET_PDF: "/api/student/hallticket/pdf",
+            API_EXAMS_CURRENT: "/api/student/exams/current",
+            API_EXAMS_UPCOMING: "/api/student/exams/upcoming",
+            API_EXAMS_COMPLETED: "/api/student/exams/completed",
+            API_STATS: "/api/student/stats",
+            TOAST_DURATION: 3500,
+            REFRESH_INTERVAL: 30000, // 30 seconds for updates
+            MAX_TICKETS_DISPLAY: 6
+        };
+
+        // Toast Notification Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, StudentConfig.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+        }
+
+        // Modal Manager
+        class ModalManager {
+            static open(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                    
+                    // Add event listener to prevent closing on backdrop click
+                    modal.addEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static close(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                    
+                    // Remove the event listener
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            // Handler to prevent closing on backdrop click
+            static handleBackdropClick(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.stopPropagation(); // Prevent closing
+                }
+            }
+        }
+
+        // PDF Generator for client-side PDF creation
+        class PdfGenerator {
+            static generateHallTicketPDF(hallTicketData) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF('p', 'mm', 'a4');
+                        
+                        // Set default font
+                        doc.setFont("helvetica");
+                        
+                        // Title
+                        doc.setFontSize(24);
+                        doc.setTextColor(15, 76, 117); // Dark blue
+                        doc.text("EXAMINATION HALL TICKET", 105, 20, null, null, 'center');
+                        
+                        // Subtitle
+                        doc.setFontSize(14);
+                        doc.setTextColor(100, 100, 100);
+                        doc.text("University Examination System", 105, 30, null, null, 'center');
+                        
+                        // Academic Year
+                        doc.setFontSize(12);
+                        doc.text(`Academic Year: ${hallTicketData.academicYear || '2024-2025'}`, 105, 38, null, null, 'center');
+                        
+                        // Line separator
+                        doc.setDrawColor(15, 76, 117);
+                        doc.setLineWidth(0.5);
+                        doc.line(20, 45, 190, 45);
+                        
+                        // Student Information Section
+                        doc.setFontSize(16);
+                        doc.setTextColor(15, 76, 117);
+                        doc.text("STUDENT INFORMATION", 20, 55);
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 0, 0);
+                        
+                        let yPos = 65;
+                        const lineHeight = 7;
+                        
+                        // Student details
+                        const studentDetails = [
+                            [`Name: ${hallTicketData.studentName || 'N/A'}`, `Roll No: ${hallTicketData.rollNo || 'N/A'}`],
+                            [`Hall Ticket No: ${hallTicketData.hallTicketNumber || 'N/A'}`, `Department: ${hallTicketData.department || 'N/A'}`],
+                            [`Year: ${hallTicketData.year || 'N/A'}`, `Email: ${hallTicketData.studentEmail || 'N/A'}`],
+                            [`Phone: ${hallTicketData.studentPhone || 'N/A'}`, `Academic Year: ${hallTicketData.academicYear || 'N/A'}`]
+                        ];
+                        
+                        studentDetails.forEach(row => {
+                            doc.text(row[0], 20, yPos);
+                            doc.text(row[1], 105, yPos);
+                            yPos += lineHeight;
+                        });
+                        
+                        yPos += 5;
+                        
+                        // Exam Information Section
+                        doc.setFontSize(16);
+                        doc.setTextColor(15, 76, 117);
+                        doc.text("EXAMINATION DETAILS", 20, yPos);
+                        yPos += 10;
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 0, 0);
+                        
+                        // Basic exam details with start and end dates
+                        const examStartDate = hallTicketData.examStartDate || hallTicketData.examDate || 'N/A';
+                        const examEndDate = hallTicketData.examEndDate || hallTicketData.examDate || 'N/A';
+                        
+                        const examDetails = [
+                            [`Exam: ${hallTicketData.examName || 'N/A'}`, `Start Date: ${examStartDate}`],
+                            [`End Date: ${examEndDate}`, `Room: ${hallTicketData.roomName || 'N/A'} (${hallTicketData.roomCode || 'N/A'})`],
+                            [`Seat: ${hallTicketData.seatNumber || 'N/A'}`, `Location: ${hallTicketData.location || 'N/A'}`],
+                            [`Invigilator: ${hallTicketData.invigilatorName || 'N/A'}`, `Reporting: 30 min before first subject`]
+                        ];
+                        
+                        examDetails.forEach(row => {
+                            doc.text(row[0], 20, yPos);
+                            doc.text(row[1], 105, yPos);
+                            yPos += lineHeight;
+                        });
+                        
+                        yPos += 5;
+                        
+                        // Subjects with Timings Section - Table format
+                        if (hallTicketData.subjects && Array.isArray(hallTicketData.subjects) && hallTicketData.subjects.length > 0) {
+                            doc.setFontSize(14);
+                            doc.setTextColor(15, 76, 117);
+                            doc.text("SUBJECT SCHEDULE", 20, yPos);
+                            yPos += 8;
+                            
+                            doc.setFontSize(9);
+                            doc.setTextColor(0, 0, 0);
+                            
+                            // Draw table header
+                            doc.setFillColor(15, 76, 117);
+                            doc.rect(20, yPos - 4, 170, 8, 'F');
+                            doc.setTextColor(255, 255, 255);
+                            
+                            const colWidths = [45, 35, 30, 30, 30];
+                            let xPos = 22;
+                            const headers = ['Subject', 'Date', 'Start', 'End', 'Sign'];
+                            
+                            headers.forEach((header, i) => {
+                                doc.text(header, xPos, yPos + 1);
+                                xPos += colWidths[i] || 30;
+                            });
+                            
+                            yPos += 8;
+                            doc.setTextColor(0, 0, 0);
+                            
+                            // Draw rows
+                            hallTicketData.subjects.forEach((subject, index) => {
+                                const subjectName = subject.name || subject.subjectName || `Subject ${index + 1}`;
+                                const subjectDate = subject.date || subject.examDate || hallTicketData.examDate || 'N/A';
+                                const startTime = subject.startTime || subject.start || 'N/A';
+                                const endTime = subject.endTime || subject.end || 'N/A';
+                                
+                                // Alternate row colors
+                                if (index % 2 === 0) {
+                                    doc.setFillColor(248, 249, 250);
+                                    doc.rect(20, yPos - 4, 170, 7, 'F');
+                                }
+                                
+                                xPos = 22;
+                                doc.text(subjectName.substring(0, 15), xPos, yPos + 1);
+                                xPos += colWidths[0];
+                                doc.text(subjectDate, xPos, yPos + 1);
+                                xPos += colWidths[1];
+                                doc.text(startTime, xPos, yPos + 1);
+                                xPos += colWidths[2];
+                                doc.text(endTime, xPos, yPos + 1);
+                                xPos += colWidths[3];
+                                doc.text('__________', xPos, yPos + 1);
+                                
+                                yPos += 7;
+                                
+                                // Add page if needed
+                                if (yPos > 270) {
+                                    doc.addPage();
+                                    yPos = 20;
+                                }
+                            });
+                            
+                            yPos += 5;
+                        }
+                        
+                        // QR Code Placeholder
+                        doc.setFontSize(14);
+                        doc.setTextColor(15, 76, 117);
+                        doc.text("EXAMINATION PASS", 105, yPos, null, null, 'center');
+                        yPos += 10;
+                        
+                        // Create QR code placeholder
+                        doc.setDrawColor(200, 200, 200);
+                        doc.setFillColor(240, 240, 240);
+                        doc.rect(80, yPos, 50, 50, 'F');
+                        
+                        doc.setFontSize(8);
+                        doc.setTextColor(100, 100, 100);
+                        doc.text("SCAN AT EXAM CENTER", 105, yPos + 60, null, null, 'center');
+                        
+                        yPos += 70;
+                        
+                        // Important Instructions
+                        doc.setFontSize(16);
+                        doc.setTextColor(15, 76, 117);
+                        doc.text("IMPORTANT INSTRUCTIONS", 20, yPos);
+                        yPos += 10;
+                        
+                        doc.setFontSize(9);
+                        doc.setTextColor(0, 0, 0);
+                        
+                        const instructions = hallTicketData.instructions || [
+                            "1. Carry this hall ticket along with your valid University ID card.",
+                            "2. Report to the examination hall 30 minutes before the first subject's start time.",
+                            "3. No electronic devices (mobile phones, smart watches, etc.) are allowed.",
+                            "4. Bring your own writing materials (pen, pencil, ruler, etc.).",
+                            "5. Follow all instructions given by the invigilator.",
+                            "6. Maintain complete silence in the examination hall.",
+                            "7. Cheating or malpractice will lead to serious consequences.",
+                            "8. Do not leave the examination hall without permission.",
+                            "9. Submit your answer sheet to the invigilator before leaving.",
+                            "10. Keep this hall ticket safe for future reference."
+                        ];
+                        
+                        instructions.forEach(instruction => {
+                            if (yPos > 270) {
+                                doc.addPage();
+                                yPos = 20;
+                            }
+                            doc.text(instruction, 20, yPos, { maxWidth: 170 });
+                            yPos += 8;
+                        });
+                        
+                        // Footer
+                        doc.setFontSize(8);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text("This is a system generated hall ticket. No signature required.", 105, 285, null, null, 'center');
+                        doc.text(`Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 105, 290, null, null, 'center');
+                        
+                        // Save the PDF
+                        const filename = `HallTicket_${hallTicketData.rollNo || 'Student'}_${hallTicketData.examName || 'Exam'}.pdf`.replace(/[^a-zA-Z0-9_\-.]/g, '_');
+                        doc.save(filename);
+                        
+                        resolve(true);
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            }
+        }
+
+        // Student Dashboard Manager
+        class StudentDashboard {
+            static currentHallTicketData = null;
+            static allHallTickets = [];
+            static dashboardData = null;
+            static refreshInterval = null;
+            
+            static async init() {
+                try {
+                    await this.loadStudentInfo();
+                    await this.loadDashboardData();
+                    this.startAutoRefresh();
+                    this.updateCurrentTime();
+                    this.setupEventListeners();
+                } catch (error) {
+                    console.error("Failed to initialize dashboard:", error);
+                    ToastManager.error("Failed to load dashboard. Please refresh.");
+                }
+            }
+            
+            static async loadStudentInfo() {
+                try {
+                    const response = await fetch(StudentConfig.API_PROFILE);
+                    
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            window.location.href = "/login";
+                            return;
+                        }
+                        throw new Error(`HTTP ${response.status}: Failed to load profile`);
+                    }
+                    
+                    const profile = await response.json();
+                    
+                    // Update user info
+                    const studentName = profile.fullName || profile.name || "Student";
+                    document.getElementById("studentName").textContent = studentName;
+                    document.getElementById("userName").textContent = studentName;
+                    
+                    // Update avatar initials
+                    const initials = studentName.split(' ')
+                        .map(n => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .substring(0, 2);
+                    document.getElementById("userAvatar").textContent = initials;
+                    
+                } catch (error) {
+                    console.error("Failed to load student info:", error);
+                    ToastManager.error("Failed to load student information");
+                }
+            }
+            
+            static async loadDashboardData() {
+                try {
+                    console.log("🚀 Loading dashboard data from:", StudentConfig.API_DASHBOARD);
+                    const response = await fetch(StudentConfig.API_DASHBOARD);
+                    
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            window.location.href = "/login";
+                            return;
+                        }
+                        throw new Error(`HTTP ${response.status}: Failed to load dashboard`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log("📊 Dashboard data received:", data);
+                    
+                    this.dashboardData = data;
+                    
+                    // Update statistics
+                    this.updateStatistics();
+                    
+                    // Update all sections
+                    this.updateHallTicketsGrid();
+                    this.updateCurrentExams();
+                    this.updateUpcomingExams();
+                    
+                    // Update important notice
+                    this.updateImportantNotice();
+                    
+                    // Update last updated timestamp
+                    document.getElementById("lastUpdated").textContent = 
+                        `Updated: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                    
+                } catch (error) {
+                    console.error("❌ Failed to load dashboard data:", error);
+                    ToastManager.error("Failed to load dashboard. Please refresh.");
+                    
+                    // Set default values
+                    this.setDefaultValues();
+                }
+            }
+
+            static updateStatistics() {
+                if (!this.dashboardData) {
+                    console.log("⚠ No dashboard data available");
+                    return;
+                }
+                
+                // Try to extract stats from different possible structures
+                let stats = {};
+                if (this.dashboardData.stats) {
+                    stats = this.dashboardData.stats;
+                } else if (this.dashboardData.totalExams !== undefined) {
+                    stats = this.dashboardData;
+                }
+                
+                // Update stats cards
+                const totalExams = stats.totalExams || stats.hallTicketsCount || 0;
+                const hallTicketsCount = stats.hallTicketsCount || stats.totalExams || 0;
+                const upcomingExamsCount = stats.upcomingExamsCount || 0;
+                const completedExamsCount = stats.completedExamsCount || 0;
+                const currentExamsCount = stats.currentExamsCount || 0;
+                
+                document.getElementById("totalExams").textContent = totalExams;
+                document.getElementById("hallTicketsCount").textContent = hallTicketsCount;
+                document.getElementById("upcomingExamsCount").textContent = upcomingExamsCount;
+                document.getElementById("completedExamsCount").textContent = completedExamsCount;
+                
+                // Update header counts
+                document.getElementById("currentExamCount").textContent = 
+                    `${currentExamsCount} Exam${currentExamsCount !== 1 ? 's' : ''}`;
+                document.getElementById("upcomingExamCount").textContent = 
+                    `${upcomingExamsCount} Exam${upcomingExamsCount !== 1 ? 's' : ''}`;
+                
+                // Toggle alert for today's exams
+                const hasExamsToday = stats.hasExamsToday || currentExamsCount > 0;
+                this.toggleAlert(hasExamsToday);
+                
+                // Add attendance and CGPA if available
+                if (stats.attendancePercentage) {
+                    const cgpa = stats.currentCGPA ? `CGPA: ${stats.currentCGPA} | ` : '';
+                    document.getElementById("examsChange").textContent = 
+                        `${cgpa}Attendance: ${stats.attendancePercentage}%`;
+                }
+            }
+            
+            static updateHallTicketsGrid() {
+                const gridElement = document.getElementById("hallTicketsGrid");
+                if (!gridElement) return;
+                
+                const hallTickets = this.dashboardData?.allHallTickets || [];
+                const tickets = hallTickets.slice(0, StudentConfig.MAX_TICKETS_DISPLAY);
+                
+                if (tickets.length === 0) {
+                    gridElement.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎫</div>
+                            <h3>No hall tickets available</h3>
+                            <p>Hall tickets will appear here when they are generated for your exams.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                gridElement.innerHTML = tickets.map(ticket => this.createExamCardHTML(ticket)).join('');
+            }
+            
+            static updateCurrentExams() {
+                const gridElement = document.getElementById("currentExamsGrid");
+                if (!gridElement) return;
+                
+                const currentExams = this.dashboardData?.currentExams || [];
+                
+                if (currentExams.length === 0) {
+                    gridElement.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📚</div>
+                            <h3>No current exams</h3>
+                            <p>You don't have any exams scheduled for today.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                gridElement.innerHTML = currentExams.map(ticket => this.createExamCardHTML(ticket)).join('');
+            }
+            
+            static updateUpcomingExams() {
+                const gridElement = document.getElementById("upcomingExamsGrid");
+                if (!gridElement) return;
+                
+                const upcomingExams = this.dashboardData?.upcomingExams || [];
+                
+                if (upcomingExams.length === 0) {
+                    gridElement.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <h3>No upcoming exams</h3>
+                            <p>You don't have any upcoming exams in the next 7 days.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                gridElement.innerHTML = upcomingExams.map(ticket => this.createExamCardHTML(ticket)).join('');
+            }
+            
+            static createExamCardHTML(ticket) {
+                const statusClass = `status-${ticket.status || 'upcoming'}`;
+                const statusText = (ticket.status || 'upcoming').charAt(0).toUpperCase() + (ticket.status || 'upcoming').slice(1);
+                
+                // Set card class based on status
+                let cardClass = 'exam-card';
+                if (ticket.status === 'current') cardClass += ' current';
+                if (ticket.status === 'upcoming') cardClass += ' upcoming';
+                if (ticket.status === 'completed') cardClass += ' completed';
+                
+                // Get subject information
+                let subjectInfo = 'N/A';
+                let timingInfo = 'N/A';
+                let subjectCount = 0;
+                let examPeriod = 'N/A';
+                
+                if (ticket.subjects && Array.isArray(ticket.subjects) && ticket.subjects.length > 0) {
+                    subjectCount = ticket.subjects.length;
+                    subjectInfo = ticket.subjects.map(s => s.name || s.subjectName || 'Subject').join(', ');
+                    
+                    // Get exam period from subjects
+                    const firstSubject = ticket.subjects[0];
+                    const lastSubject = ticket.subjects[ticket.subjects.length - 1];
+                    const firstDate = firstSubject.date || firstSubject.examDate || ticket.examDate;
+                    const lastDate = lastSubject.date || lastSubject.examDate || ticket.examDate;
+                    
+                    if (firstDate && lastDate && firstDate !== lastDate) {
+                        examPeriod = `${firstDate} to ${lastDate}`;
+                    } else if (firstDate) {
+                        examPeriod = firstDate;
+                    }
+                    
+                    if (ticket.subjects.length === 1) {
+                        const subject = ticket.subjects[0];
+                        timingInfo = `${subject.startTime || subject.start || 'N/A'} - ${subject.endTime || subject.end || 'N/A'}`;
+                    } else if (ticket.subjects.length > 1) {
+                        const first = ticket.subjects[0];
+                        const last = ticket.subjects[ticket.subjects.length - 1];
+                        timingInfo = `${first.startTime || first.start || 'N/A'} to ${last.endTime || last.end || 'N/A'}`;
+                    }
+                } else {
+                    examPeriod = ticket.examDate || 'N/A';
+                }
+                
+                return `
+                    <div class="${cardClass}">
+                        <div class="exam-header">
+                            <div class="exam-title" title="${ticket.examName}">${ticket.examName || 'Unnamed Exam'}</div>
+                            <div class="exam-status ${statusClass}">${statusText}</div>
+                        </div>
+                        <div class="exam-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Subjects</span>
+                                <span class="detail-value">${subjectCount} Subject${subjectCount !== 1 ? 's' : ''}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Exam Period</span>
+                                <span class="detail-value">${examPeriod}</span>
+                            </div>
+                            <div class="detail-item" style="grid-column: 1 / -1;">
+                                <span class="detail-label">Subject Timings</span>
+                                <span class="detail-value" style="font-size: 12px;">${timingInfo}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Room</span>
+                                <span class="detail-value">${ticket.roomCode || ticket.roomName || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div class="exam-actions">
+                            <button class="exam-action-btn" onclick="StudentDashboard.viewHallTicket('${ticket.examId}')">
+                                👁️ View
+                            </button>
+                            <button class="exam-action-btn download-btn" onclick="StudentDashboard.downloadHallTicketPdf('${ticket.examId}', this)">
+                                <span class="btn-text">📥 Download</span>
+                                <span class="download-spinner" style="display: none;"></span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            static updateImportantNotice() {
+                const noticeElement = document.getElementById("importantNotice");
+                if (!noticeElement || !this.dashboardData) return;
+                
+                const importantNotice = this.dashboardData.importantNotice;
+                if (importantNotice && importantNotice !== "Final exams begin next week. Please check your hall tickets.") {
+                    noticeElement.innerHTML = `
+                        <p><strong>📢 Important Notice:</strong></p>
+                        <p style="margin-top: 10px; color: #666;">${importantNotice}</p>
+                        <hr style="margin: 15px 0; border-color: #e5e7eb;">
+                        <p><strong>Exam Guidelines:</strong></p>
+                        <ul style="margin-left: 20px; color: #666; margin-top: 10px;">
+                            <li>Carry your hall ticket and valid ID card to the examination hall</li>
+                            <li>Report to the exam center 30 minutes before the scheduled time</li>
+                            <li>No electronic devices allowed inside the examination hall</li>
+                            <li>Follow all invigilator instructions during the exam</li>
+                        </ul>
+                    `;
+                }
+            }
+            
+            static toggleAlert(show) {
+                const alertBox = document.getElementById("alertBox");
+                if (alertBox) {
+                    if (show) {
+                        alertBox.classList.remove("hidden");
+                    } else {
+                        alertBox.classList.add("hidden");
+                    }
+                }
+            }
+            
+            static setDefaultValues() {
+                const stats = ["totalExams", "hallTicketsCount", "upcomingExamsCount", "completedExamsCount"];
+                stats.forEach(stat => document.getElementById(stat).textContent = "0");
+                
+                document.getElementById("currentExamCount").textContent = "0 Exams";
+                document.getElementById("upcomingExamCount").textContent = "0 Exams";
+                
+                this.toggleAlert(false);
+            }
+            
+            static async viewHallTicket(examId) {
+                if (!examId || examId === '') {
+                    ToastManager.warning("Hall ticket not available.");
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${StudentConfig.API_HALLTICKET_BY_EXAM}${examId}`);
+                    
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            throw new Error("Hall ticket not found for this exam");
+                        }
+                        throw new Error(`HTTP ${response.status}: Failed to load hall ticket`);
+                    }
+                    
+                    const hallTicket = await response.json();
+                    this.currentHallTicketData = hallTicket;
+                    
+                    // Update modal content
+                    this.updateHallTicketModal(hallTicket);
+                    
+                    // Show modal
+                    ModalManager.open("hallTicketModal");
+                    
+                    ToastManager.success("Hall ticket loaded successfully!");
+                    
+                } catch (error) {
+                    console.error("Failed to load hall ticket:", error);
+                    ToastManager.warning("Hall ticket is not available yet. Please check back later.");
+                }
+            }
+            
+            static updateHallTicketModal(ticketData) {
+                const contentElement = document.getElementById("hallTicketContent");
+                
+                if (!contentElement) return;
+                
+                // Get exam start and end dates
+                const examStartDate = ticketData.examStartDate || ticketData.examDate || 'N/A';
+                const examEndDate = ticketData.examEndDate || ticketData.examDate || 'N/A';
+                
+                // Build subjects table if subjects exist
+                let subjectsHtml = '';
+                if (ticketData.subjects && Array.isArray(ticketData.subjects) && ticketData.subjects.length > 0) {
+                    subjectsHtml = `
+                        <div class="hallticket-item subject-schedule">
+                            <strong>📚 Subject Schedule with Timings</strong>
+                            <table class="subject-table">
+                                <thead>
+                                    <tr>
+                                        <th>Subject Name</th>
+                                        <th>Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Student Sign</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${ticketData.subjects.map((subject, index) => `
+                                        <tr>
+                                            <td><strong>${subject.name || subject.subjectName || 'Subject ' + (index + 1)}</strong></td>
+                                            <td>${subject.date || subject.examDate || ticketData.examDate || 'N/A'}</td>
+                                            <td>${subject.startTime || subject.start || 'N/A'}</td>
+                                            <td>${subject.endTime || subject.end || 'N/A'}</td>
+                                            <td class="sign-cell">
+                                                <span class="sign-line"></span>
+                                                <br><span style="font-size: 10px;">Signature</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                contentElement.innerHTML = `
+                    <div class="hallticket-header">
+                        <h3>EXAMINATION HALL TICKET</h3>
+                        <p>University Examination System</p>
+                        <p>Academic Year ${ticketData.academicYear || '2024-2025'}</p>
+                    </div>
+                    
+                    <div class="hallticket-info">
+                        <div class="hallticket-item">
+                            <strong>Student Name:</strong> ${ticketData.studentName || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Roll Number:</strong> ${ticketData.rollNo || ticketData.rollNumber || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Hall Ticket No:</strong> ${ticketData.hallTicketNumber || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Department:</strong> ${ticketData.department || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Year:</strong> ${ticketData.year || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Email:</strong> ${ticketData.studentEmail || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Phone:</strong> ${ticketData.studentPhone || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Exam Name:</strong> ${ticketData.examName || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Exam Start Date:</strong> ${examStartDate}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Exam End Date:</strong> ${examEndDate}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Room:</strong> ${ticketData.roomName || ticketData.roomCode || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Seat Number:</strong> ${ticketData.seatNumber || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Row/Column:</strong> ${ticketData.rowNo || 'N/A'}/${ticketData.colNo || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Location:</strong> ${ticketData.location || 'Main Campus'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Invigilator:</strong> ${ticketData.invigilatorName || ticketData.invigilator || 'To be assigned'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Invigilator ID:</strong> ${ticketData.invigilatorEmployeeId || 'N/A'}
+                        </div>
+                        <div class="hallticket-item">
+                            <strong>Reporting Time:</strong> 30 minutes before first subject
+                        </div>
+                        ${subjectsHtml}
+                    </div>
+                    
+                    <div class="hallticket-qr">
+                        <p>Scan this QR code at exam center:</p>
+                        <div style="width: 150px; height: 150px; margin: 10px auto; background: #f0f0f0; 
+                                   border: 1px solid #ccc; display: flex; align-items: center; 
+                                   justify-content: center; font-family: monospace;">
+                            <div style="text-align: center; padding: 10px;">
+                                <div style="font-size: 10px; margin-bottom: 5px;">EXAM PASS</div>
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">
+                                    ${(ticketData.studentName || 'STUDENT').substring(0, 10)}
+                                </div>
+                                <div style="font-size: 10px; margin-bottom: 3px;">${ticketData.rollNo || ''}</div>
+                                <div style="font-size: 9px;">${ticketData.examDate || ''}</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 12px; margin-top: 10px;">
+                            ID: ${ticketData.rollNo || ticketData.studentId || 'STUDENT_ID'}
+                        </p>
+                    </div>
+                    
+                    <div class="hallticket-instructions">
+                        <h4>📋 Important Instructions:</h4>
+                        <ul>
+                            ${(ticketData.instructions || [
+                                "Carry this hall ticket and your University ID card",
+                                "Report to the exam hall 30 minutes before the first subject's start time",
+                                "No electronic devices are allowed in the exam hall",
+                                "Bring your own writing materials (pen, pencil, etc.)",
+                                "Follow all instructions given by the invigilator",
+                                "Maintain silence and discipline in the examination hall",
+                                "Cheating or malpractice will lead to serious consequences",
+                                "Do not leave the examination hall without permission",
+                                "Submit your answer sheet to the invigilator before leaving",
+                                "Keep this hall ticket safe for future reference"
+                            ]).map(instruction => `<li>${instruction}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // Main PDF Download Method
+            static async downloadHallTicketPdf(examId, buttonElement = null) {
+                if (!examId || examId === '') {
+                    ToastManager.warning("Hall ticket not available for download.");
+                    return;
+                }
+                
+                // Show loading state if button element is provided
+                let originalText = '';
+                if (buttonElement) {
+                    const btnText = buttonElement.querySelector('.btn-text');
+                    const spinner = buttonElement.querySelector('.download-spinner');
+                    if (btnText) originalText = btnText.innerHTML;
+                    if (btnText) btnText.innerHTML = 'Generating...';
+                    if (spinner) spinner.style.display = 'inline-block';
+                    buttonElement.disabled = true;
+                }
+                
+                try {
+                    ToastManager.info("Generating hall ticket PDF...");
+                    
+                    // Try server-side PDF generation first
+                    const response = await fetch(`${StudentConfig.API_HALLTICKET_PDF}/${examId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/pdf'
+                        }
+                    });
+                    
+                    if (response.ok && response.headers.get('content-type')?.includes('application/pdf')) {
+                        // Server-side PDF available
+                        const blob = await response.blob();
+                        
+                        // Get filename from Content-Disposition header or create default
+                        let filename = `HallTicket_${examId}.pdf`;
+                        const contentDisposition = response.headers.get('Content-Disposition');
+                        if (contentDisposition && contentDisposition.includes('filename=')) {
+                            const matches = /filename="?([^"]+)"?/gi.exec(contentDisposition);
+                            if (matches && matches[1]) {
+                                filename = matches[1];
+                            }
+                        }
+                        
+                        // Download the blob
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        link.style.display = 'none';
+                        
+                        document.body.appendChild(link);
+                        link.click();
+                        
+                        // Cleanup
+                        setTimeout(() => {
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                        }, 100);
+                        
+                        ToastManager.success("Hall ticket downloaded successfully!");
+                        
+                    } else {
+                        // If server-side PDF not available, try client-side generation
+                        await this.downloadHallTicketPdfClientSide(examId);
+                    }
+                    
+                } catch (error) {
+                    console.error("Failed to download hall ticket from server:", error);
+                    
+                    // Fallback to client-side generation
+                    try {
+                        await this.downloadHallTicketPdfClientSide(examId);
+                    } catch (clientError) {
+                        console.error("Client-side PDF generation failed:", clientError);
+                        ToastManager.error("Failed to generate PDF. Please try again.");
+                    }
+                } finally {
+                    // Restore button state
+                    if (buttonElement) {
+                        const btnText = buttonElement.querySelector('.btn-text');
+                        const spinner = buttonElement.querySelector('.download-spinner');
+                        if (btnText) btnText.innerHTML = originalText || '📥 Download';
+                        if (spinner) spinner.style.display = 'none';
+                        buttonElement.disabled = false;
+                    }
+                }
+            }
+            
+            // Client-side PDF generation as fallback
+            static async downloadHallTicketPdfClientSide(examId) {
+                try {
+                    // Fetch hall ticket data
+                    const response = await fetch(`${StudentConfig.API_HALLTICKET_BY_EXAM}${examId}`);
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch hall ticket data");
+                    }
+                    
+                    const hallTicketData = await response.json();
+                    
+                    // Generate PDF using jsPDF
+                    await PdfGenerator.generateHallTicketPDF(hallTicketData);
+                    
+                    ToastManager.success("PDF generated successfully!");
+                    
+                } catch (error) {
+                    console.error("Client-side PDF generation error:", error);
+                    throw error;
+                }
+            }
+            
+            static downloadHallTicketPdfFromModal(buttonElement) {
+                if (this.currentHallTicketData && this.currentHallTicketData.examId) {
+                    this.downloadHallTicketPdf(this.currentHallTicketData.examId, buttonElement);
+                } else {
+                    ToastManager.warning("No hall ticket data available.");
+                }
+            }
+            
+            static printHallTicket() {
+                const modalContent = document.getElementById('hallTicketModal');
+                if (modalContent) {
+                    const printWindow = window.open('', '_blank');
+                    
+                    const printContent = `
+                        <html>
+                            <head>
+                                <title>Hall Ticket - Print</title>
+                                <style>
+                                    @media print {
+                                        @page { margin: 15mm; }
+                                        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+                                        .no-print { display: none !important; }
+                                    }
+                                    body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                                    .hallticket { border: 2px solid #000; padding: 25px; border-radius: 10px; max-width: 900px; margin: 0 auto; }
+                                    .hallticket-header { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #000; }
+                                    .hallticket-header h3 { margin: 0 0 10px 0; font-size: 28px; color: #0f4c75; }
+                                    .hallticket-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
+                                    .hallticket-item { padding: 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6; font-size: 14px; }
+                                    .hallticket-item strong { color: #0f4c75; display: block; margin-bottom: 4px; }
+                                    .hallticket-qr { text-align: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
+                                    .hallticket-instructions { margin-top: 25px; padding-top: 15px; border-top: 1px solid #ccc; }
+                                    .hallticket-instructions h4 { color: #0f4c75; margin-bottom: 12px; }
+                                    .hallticket-instructions ul { padding-left: 20px; }
+                                    .hallticket-instructions li { margin-bottom: 8px; line-height: 1.5; }
+                                    .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #666; }
+                                    
+                                    .subject-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+                                    .subject-table th { background: #0f4c75; color: white; padding: 10px 8px; text-align: left; font-weight: 500; }
+                                    .subject-table td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; }
+                                    .subject-table tr:nth-child(even) { background: #f8f9fa; }
+                                    .subject-table tr:last-child td { border-bottom: none; }
+                                    .subject-table .sign-cell { text-align: center; color: #6b7280; font-style: italic; font-size: 12px; }
+                                    .subject-table .sign-line { display: inline-block; width: 80px; border-bottom: 1px solid #999; margin: 0 5px; }
+                                </style>
+                            </head>
+                            <body>
+                                ${document.getElementById('hallTicketContent').innerHTML}
+                                <div class="footer no-print">
+                                    Printed on: ${new Date().toLocaleString()}<br>
+                                    This is a system generated hall ticket. No signature required.
+                                </div>
+                            </body>
+                        </html>
+                    `;
+                    
+                    printWindow.document.write(printContent);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    
+                    // Wait for content to load before printing
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 500);
+                }
+            }
+            
+            static closeHallTicket() {
+                ModalManager.close("hallTicketModal");
+                this.currentHallTicketData = null;
+            }
+            
+            static async refreshDashboard() {
+                const refreshBtn = document.querySelector('.btn-info');
+                if (refreshBtn) {
+                    refreshBtn.textContent = '⏳ Loading...';
+                    refreshBtn.disabled = true;
+                }
+                
+                ToastManager.info("Refreshing dashboard...");
+                await this.loadDashboardData();
+                
+                if (refreshBtn) {
+                    refreshBtn.textContent = '🔄 Refresh';
+                    refreshBtn.disabled = false;
+                }
+                
+                ToastManager.success("Dashboard refreshed successfully!");
+            }
+            
+            static updateCurrentTime() {
+                const updateTime = () => {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit'
+                    });
+                    const dateString = now.toLocaleDateString([], {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    document.getElementById("currentTime").textContent = 
+                        `${dateString} • ${timeString}`;
+                };
+                
+                updateTime();
+                setInterval(updateTime, 60000); // Update every minute
+            }
+            
+            static startAutoRefresh() {
+                if (this.refreshInterval) clearInterval(this.refreshInterval);
+                
+                this.refreshInterval = setInterval(() => {
+                    this.loadDashboardData();
+                }, StudentConfig.REFRESH_INTERVAL);
+            }
+            
+            static setupEventListeners() {
+                // Add keyboard shortcuts
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        ModalManager.close('hallTicketModal');
+                        ModalManager.close('logoutConfirmModal');
+                    }
+                    if (event.key === 'r' && (event.ctrlKey || event.metaKey)) {
+                        event.preventDefault();
+                        this.refreshDashboard();
+                    }
+                    if (event.key === 'p' && (event.ctrlKey || event.metaKey)) {
+                        event.preventDefault();
+                        this.printHallTicket();
+                    }
+                    if (event.key === 'd' && (event.ctrlKey || event.metaKey) && this.currentHallTicketData) {
+                        event.preventDefault();
+                        this.downloadHallTicketPdf(this.currentHallTicketData.examId);
+                    }
+                });
+                
+                // Handle page visibility change
+                document.addEventListener("visibilitychange", () => {
+                    if (!document.hidden) {
+                        this.refreshDashboard();
+                    }
+                });
+                
+                // Close modal when clicking outside
+                document.addEventListener('click', (event) => {
+                    const modals = document.querySelectorAll('.modal');
+                    modals.forEach(modal => {
+                        if (event.target === modal) {
+                            ModalManager.close(modal.id);
+                        }
+                    });
+                });
+                
+                // Prevent form submission on enter in modals
+                document.querySelectorAll('.modal input').forEach(input => {
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                        }
+                    });
+                });
+            }
+            
+            static openLogoutConfirm() {
+                ModalManager.open("logoutConfirmModal");
+            }
+            
+            static closeLogoutConfirm() {
+                ModalManager.close("logoutConfirmModal");
+            }
+            
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            StudentDashboard.init();
+        });
+
+        // Make manager accessible globally
+        window.StudentDashboard = StudentDashboard;
+        window.ToastManager = ToastManager;
+        window.ModalManager = ModalManager;
+        window.PdfGenerator = PdfGenerator;
+    </script>
+</body>
+</html>

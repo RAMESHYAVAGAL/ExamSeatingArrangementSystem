@@ -1,0 +1,22 @@
+# Compiled files  
+*.class  
+*.jar  
+*.war  
+*.ear  
+target/  
+.gradle/  
+build/  
+.idea/  
+*.iml  
+.project  
+.classpath  
+.settings/  
+.vscode/  
+*.log  
+.DS_Store  
+*/target/  
+*/build/  
+*/bin/  
+application.properties  
+application-dev.properties  
+application-prod.properties  

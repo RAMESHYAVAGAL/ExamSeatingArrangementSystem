@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hall Ticket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .details {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .details td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .details tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+        .important {
+            color: #d9534f;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 5px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 th:text="'Hall Ticket - ' + ${examName}"></h1>
+        <p>Exam Seating Arrangement System</p>
+    </div>
+
+    <div class="content">
+        <p>Dear <strong th:text="${studentName}"></strong>,</p>
+        
+        <p>Your hall ticket for the examination has been generated successfully. 
+        Please find your exam details below:</p>
+        
+        <table class="details">
+            <tr>
+                <td><strong>Student Name:</strong></td>
+                <td th:text="${studentName}"></td>
+            </tr>
+            <tr>
+                <td><strong>Roll Number:</strong></td>
+                <td th:text="${rollNo}"></td>
+            </tr>
+            <tr>
+                <td><strong>Hall Ticket Number:</strong></td>
+                <td th:text="${hallTicketNo}"></td>
+            </tr>
+            <tr>
+                <td><strong>Subject Code:</strong></td>
+                <td th:text="${subjectCode}"></td>
+            </tr>
+            <tr>
+                <td><strong>Exam Name:</strong></td>
+                <td th:text="${examName}"></td>
+            </tr>
+            <tr th:if="${examDate}">
+                <td><strong>Exam Date:</strong></td>
+                <td th:text="${examDate}"></td>
+            </tr>
+            <tr th:if="${startTime}">
+                <td><strong>Exam Time:</strong></td>
+                <td th:text="${startTime} + ' to ' + ${endTime}"></td>
+            </tr>
+            <tr>
+                <td><strong>Room:</strong></td>
+                <td th:text="${roomCode} + ' - ' + ${roomName}"></td>
+            </tr>
+            <tr>
+                <td><strong>Seat Number:</strong></td>
+                <td th:text="${seatNumber}"></td>
+            </tr>
+            <tr th:if="${rowNo}">
+                <td><strong>Row/Column:</strong></td>
+                <td th:text="'Row ' + ${rowNo} + ', Column ' + ${colNo}"></td>
+            </tr>
+            <tr th:if="${location}">
+                <td><strong>Location:</strong></td>
+                <td th:text="${location}"></td>
+            </tr>
+        </table>
+        
+        <div class="important">
+            <p>Important Instructions:</p>
+            <ul>
+                <li>Bring this hall ticket (print or digital) to the exam center</li>
+                <li>Carry your college ID card</li>
+                <li>Arrive at least 30 minutes before the exam starts</li>
+                <li>No electronic devices are allowed in the exam hall</li>
+                <li>Follow all examination rules and regulations</li>
+            </ul>
+        </div>
+        
+        <p>Your hall ticket is attached as a PDF document with this email. 
+        Please download and keep it for reference.</p>
+        
+        <p>Best of luck for your exam!</p>
+    </div>
+    
+    <div class="footer">
+        <p>This is an auto-generated email. Please do not reply.</p>
+        <p>For any queries, contact the examination department.</p>
+        <p>© 2026 Exam Seating Arrangement System. All rights reserved.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Profile</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        button, select, input, textarea {
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* ===== Modal ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            width: 500px;
+            max-width: 95%;
+            max-height: 90vh;
+            border-radius: 16px;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #0f4c75;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #0f4c75, #3282b8);
+            color: #fff;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, .2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h3 {
+            color: #0f4c75;
+        }
+
+        /* ===== Logout Modal Styles ===== */
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Profile Container ===== */
+        .profile-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== Profile Sidebar ===== */
+        .profile-sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0f4c75, #3282b8);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .profile-name {
+            font-size: 22px;
+            font-weight: 600;
+            color: #0f4c75;
+            margin-bottom: 5px;
+        }
+
+        .profile-id {
+            color: #6b7280;
+            font-size: 14px;
+            background: #f8f9fa;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* ===== Profile Details ===== */
+        .profile-details {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .section-header h2 {
+            color: #0f4c75;
+            font-size: 1.4rem;
+        }
+
+        .section-content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .section-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-group {
+            margin-bottom: 30px;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #374151;
+            font-weight: 500;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ===== User Menu in Header ===== */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0f4c75, #3282b8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* ===== Form Styles ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #0f4c75;
+            box-shadow: 0 0 0 3px rgba(15, 76, 117, 0.1);
+        }
+
+        .form-control.error {
+            border-color: #dc2626;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 576px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation">
+        <h2>Student Portal</h2>
+        <a href="/student-dashboard">🏠 Dashboard</a>
+        <a href="/student-profile" class="active">👤 My Profile</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h3>Student Profile</h3>
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar">SD</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">Student</div>
+                    <div class="user-role">Student</div>
+                </div>
+                <button type="button" class="btn btn-danger" onclick="StudentProfile.openLogoutConfirm()">
+                    🚪 Logout
+                </button>
+            </div>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Profile Content -->
+        <div class="profile-container">
+            <!-- Profile Sidebar -->
+            <div class="profile-sidebar">
+                <div class="profile-picture" id="profilePicture">
+                    <span id="profileInitials">SD</span>
+                </div>
+                
+                <div class="profile-info">
+                    <div class="profile-name" id="profileName">Student</div>
+                    <div class="profile-id" id="profileStudentId">STU00000000</div>
+                </div>
+
+                <div style="margin-top: 25px;">
+                    <button class="btn btn-success" style="width: 100%; margin-bottom: 10px;" onclick="StudentProfile.openEditModal()">
+                        ✏️ Edit Profile
+                    </button>
+                </div>
+            </div>
+
+            <!-- Profile Details -->
+            <div class="profile-details">
+                <!-- Personal Information -->
+                <div class="info-group">
+                    <div class="section-header">
+                        <h2>Personal Information</h2>
+                    </div>
+                    
+                    <div class="section-content">
+                        <div>
+                            <div class="info-label">Full Name</div>
+                            <div class="info-value" id="profileFullName">Student</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Roll Number</div>
+                            <div class="info-value" id="profileRollNo">-</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Date of Birth</div>
+                            <div class="info-value" id="profileDOB">Not specified</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Gender</div>
+                            <div class="info-value" id="profileGender">Not specified</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Blood Group</div>
+                            <div class="info-value" id="profileBloodGroup">Not specified</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Contact Number</div>
+                            <div class="info-value" id="profilePhone">-</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Email Address</div>
+                            <div class="info-value" id="profileEmail">-</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Emergency Contact</div>
+                            <div class="info-value" id="profileEmergencyContact">Not specified</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Address</div>
+                            <div class="info-value" id="profileAddress">Not specified</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Information -->
+                <div class="info-group">
+                    <div class="section-header">
+                        <h2>Academic Information</h2>
+                    </div>
+                    
+                    <div class="section-content">
+                        <div>
+                            <div class="info-label">Department</div>
+                            <div class="info-value" id="profileDepartment">-</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Year</div>
+                            <div class="info-value" id="profileYear">-</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Current Semester</div>
+                            <div class="info-value" id="profileSemester">-</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Enrollment Date</div>
+                            <div class="info-value" id="profileEnrollmentDate">Not specified</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2024 University Examination System | Student Profile
+    </footer>
+
+    <!-- Logout Confirmation Modal - Enhanced -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn btn-cancel" onclick="StudentProfile.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-logout" onclick="StudentProfile.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal" id="editProfileModal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <h3>✏️ Edit Profile</h3>
+            <form id="editProfileForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="editName">Full Name *</label>
+                        <input type="text" class="form-control" id="editName" name="name" required>
+                        <div class="error-message" id="nameError">Full name is required</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editRollNo">Roll Number *</label>
+                        <input type="text" class="form-control" id="editRollNo" name="rollNo" required>
+                        <div class="error-message" id="rollNoError">Roll number is required</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="editEmail">Email *</label>
+                        <input type="email" class="form-control" id="editEmail" name="email" required>
+                        <div class="error-message" id="emailError">Please enter a valid email address</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editPhone">Phone *</label>
+                        <input type="tel" class="form-control" id="editPhone" name="phone" required>
+                        <div class="error-message" id="phoneError">Please enter a valid phone number (10-15 digits)</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="editGender">Gender</label>
+                        <select class="form-control" id="editGender" name="gender">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editDOB">Date of Birth</label>
+                        <input type="date" class="form-control" id="editDOB" name="dateOfBirth">
+                        <div class="error-message" id="dobError">Date cannot be in the future</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="editBloodGroup">Blood Group</label>
+                        <select class="form-control" id="editBloodGroup" name="bloodGroup">
+                            <option value="">Select Blood Group</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editEmergencyContact">Emergency Contact</label>
+                        <input type="text" class="form-control" id="editEmergencyContact" name="emergencyContact" placeholder="Name - Phone Number">
+                        <div class="error-message" id="emergencyContactError">Format: Name - 10-15 digit phone number</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editAddress">Address</label>
+                    <textarea class="form-control" id="editAddress" name="address" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="editDepartment">Department *</label>
+                        <input type="text" class="form-control" id="editDepartment" name="department" required>
+                        <div class="error-message" id="departmentError">Department is required</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editYear">Year *</label>
+                        <select class="form-control" id="editYear" name="year" required>
+                            <option value="">Select Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                        <div class="error-message" id="yearError">Please select a year</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="editCurrentSemester">Current Semester</label>
+                        <select class="form-control" id="editCurrentSemester" name="currentSemester">
+                            <option value="">Select Semester</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editEnrollmentDate">Enrollment Date</label>
+                        <input type="date" class="form-control" id="editEnrollmentDate" name="enrollmentDate">
+                        <div class="error-message" id="enrollmentDateError">Enrollment date cannot be in the future</div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="StudentProfile.closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">💾 Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Student Profile Manager
+        class StudentProfile {
+            static currentProfile = null;
+            
+            static async init() {
+                await this.loadProfileData();
+                this.setupEventListeners();
+            }
+            
+            static async loadProfileData() {
+                try {
+                    const response = await fetch('/api/student/profile');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: Failed to load profile data`);
+                    }
+                    
+                    const profile = await response.json();
+                    this.currentProfile = profile;
+                    this.updateProfileUI(profile);
+                    
+                } catch (error) {
+                    console.error("Failed to load profile:", error);
+                    this.showToast("Failed to load profile data", "error");
+                }
+            }
+            
+            static updateProfileUI(profile) {
+                // Update avatar and name
+                const studentName = profile.name || "Student";
+                document.getElementById("userName").textContent = studentName;
+                document.getElementById("profileName").textContent = studentName;
+                document.getElementById("profileFullName").textContent = studentName;
+                
+                // Update avatar initials
+                const initials = studentName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                document.getElementById("userAvatar").textContent = initials;
+                document.getElementById("profileInitials").textContent = initials;
+                
+                // Update profile fields
+                this.updateField("profileStudentId", profile.id ? `STU${profile.id.toString().padStart(8, '0')}` : "STU00000000");
+                this.updateField("profileRollNo", profile.rollNo);
+                this.updateField("profileDOB", this.formatDate(profile.dateOfBirth));
+                this.updateField("profileGender", profile.gender);
+                this.updateField("profileBloodGroup", profile.bloodGroup);
+                this.updateField("profilePhone", profile.phone);
+                this.updateField("profileEmail", profile.email);
+                this.updateField("profileEmergencyContact", profile.emergencyContact);
+                this.updateField("profileAddress", profile.address);
+                this.updateField("profileDepartment", profile.department);
+                this.updateField("profileYear", profile.year ? `Year ${profile.year}` : "");
+                this.updateField("profileSemester", profile.currentSemester ? `Semester ${profile.currentSemester}` : "");
+                this.updateField("profileEnrollmentDate", this.formatDate(profile.enrollmentDate));
+            }
+            
+            static updateField(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = value || "Not specified";
+                }
+            }
+            
+            static formatDate(dateString) {
+                if (!dateString) return "Not specified";
+                
+                try {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    return dateString;
+                }
+            }
+            
+            static openEditModal() {
+                if (!this.currentProfile) {
+                    this.showToast("Profile data not loaded", "error");
+                    return;
+                }
+                
+                // Populate form with current data
+                const profile = this.currentProfile;
+                
+                document.getElementById("editName").value = profile.name || "";
+                document.getElementById("editRollNo").value = profile.rollNo || "";
+                document.getElementById("editEmail").value = profile.email || "";
+                document.getElementById("editPhone").value = profile.phone || "";
+                document.getElementById("editGender").value = profile.gender || "";
+                document.getElementById("editDOB").value = profile.dateOfBirth || "";
+                document.getElementById("editBloodGroup").value = profile.bloodGroup || "";
+                document.getElementById("editEmergencyContact").value = profile.emergencyContact || "";
+                document.getElementById("editAddress").value = profile.address || "";
+                document.getElementById("editDepartment").value = profile.department || "";
+                document.getElementById("editYear").value = profile.year || "";
+                document.getElementById("editCurrentSemester").value = profile.currentSemester || "";
+                document.getElementById("editEnrollmentDate").value = profile.enrollmentDate || "";
+                
+                // Clear validation errors
+                this.clearValidationErrors();
+                
+                // Show modal
+                const modal = document.getElementById("editProfileModal");
+                modal.style.display = "flex";
+                modal.setAttribute("aria-hidden", "false");
+                document.body.style.overflow = "hidden";
+            }
+            
+            static closeEditModal() {
+                const modal = document.getElementById("editProfileModal");
+                modal.style.display = "none";
+                modal.setAttribute("aria-hidden", "true");
+                document.body.style.overflow = "";
+                this.clearValidationErrors();
+            }
+            
+            // Validation functions
+            static validateName(name) {
+                return name && name.trim().length >= 2;
+            }
+            
+            static validateRollNo(rollNo) {
+                return rollNo && rollNo.trim().length > 0;
+            }
+            
+            static validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return email && emailRegex.test(email);
+            }
+            
+            static validatePhone(phone) {
+                const phoneRegex = /^[\d\s\-\+\(\)]{10,15}$/;
+                return phone && phoneRegex.test(phone.replace(/\s/g, ''));
+            }
+            
+            static validateDate(dateString) {
+                if (!dateString) return true; // Optional field
+                const date = new Date(dateString);
+                const today = new Date();
+                return date <= today;
+            }
+            
+            static validateEmergencyContact(contact) {
+                if (!contact || contact.trim() === "") return true; // Empty is okay (optional field)
+                const pattern = /^[A-Za-z\s]+ - \d{10,15}$/;
+                return pattern.test(contact.trim());
+            }
+            
+            static validateDepartment(department) {
+                return department && department.trim().length > 0;
+            }
+            
+            static validateYear(year) {
+                return year && ["1", "2", "3", "4"].includes(year);
+            }
+            
+            static clearValidationErrors() {
+                // Clear all error messages and remove error class from inputs
+                const errorMessages = document.querySelectorAll('.error-message');
+                const errorInputs = document.querySelectorAll('.form-control.error');
+                
+                errorMessages.forEach(el => el.classList.remove('show'));
+                errorInputs.forEach(el => el.classList.remove('error'));
+            }
+            
+            static showError(inputId, errorId, message) {
+                const input = document.getElementById(inputId);
+                const error = document.getElementById(errorId);
+                
+                if (input) {
+                    input.classList.add('error');
+                }
+                if (error) {
+                    error.textContent = message;
+                    error.classList.add('show');
+                }
+            }
+            
+            static validateForm(data) {
+                // Clear previous errors
+                this.clearValidationErrors();
+                
+                let isValid = true;
+                
+                // Validate name
+                if (!this.validateName(data.name)) {
+                    this.showError('editName', 'nameError', 'Full name must be at least 2 characters');
+                    isValid = false;
+                }
+                
+                // Validate roll number
+                if (!this.validateRollNo(data.rollNo)) {
+                    this.showError('editRollNo', 'rollNoError', 'Roll number is required');
+                    isValid = false;
+                }
+                
+                // Validate email
+                if (!this.validateEmail(data.email)) {
+                    this.showError('editEmail', 'emailError', 'Please enter a valid email address');
+                    isValid = false;
+                }
+                
+                // Validate phone
+                if (!this.validatePhone(data.phone)) {
+                    this.showError('editPhone', 'phoneError', 'Please enter a valid phone number (10-15 digits)');
+                    isValid = false;
+                }
+                
+                // Validate date of birth
+                if (!this.validateDate(data.dateOfBirth)) {
+                    this.showError('editDOB', 'dobError', 'Date cannot be in the future');
+                    isValid = false;
+                }
+                
+                // Validate emergency contact
+                if (!this.validateEmergencyContact(data.emergencyContact)) {
+                    this.showError('editEmergencyContact', 'emergencyContactError', 'Format: Name - 10-15 digit phone number');
+                    isValid = false;
+                }
+                
+                // Validate department
+                if (!this.validateDepartment(data.department)) {
+                    this.showError('editDepartment', 'departmentError', 'Department is required');
+                    isValid = false;
+                }
+                
+                // Validate year
+                if (!this.validateYear(data.year)) {
+                    this.showError('editYear', 'yearError', 'Please select a valid year');
+                    isValid = false;
+                }
+                
+                // Validate enrollment date
+                if (!this.validateDate(data.enrollmentDate)) {
+                    this.showError('editEnrollmentDate', 'enrollmentDateError', 'Enrollment date cannot be in the future');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            static async saveProfile(event) {
+                event.preventDefault();
+                
+                const formData = new FormData(event.target);
+                const data = Object.fromEntries(formData.entries());
+                
+                // Validate form
+                if (!this.validateForm(data)) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/student/profile/update', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.showToast(result.message || "Profile updated successfully", "success");
+                        this.closeEditModal();
+                        await this.loadProfileData(); // Refresh profile data
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.message || "Failed to update profile");
+                    }
+                } catch (error) {
+                    console.error("Failed to update profile:", error);
+                    this.showToast("Failed to update profile: " + error.message, "error");
+                }
+            }
+            
+            static showToast(message, type = "info") {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, 3500);
+            }
+            
+            static openLogoutConfirm() {
+                const modal = document.getElementById("logoutConfirmModal");
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                }
+            }
+            
+            static closeLogoutConfirm() {
+                const modal = document.getElementById("logoutConfirmModal");
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                }
+            }
+            
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+            
+            static setupEventListeners() {
+                // Setup form submission
+                const editForm = document.getElementById("editProfileForm");
+                if (editForm) {
+                    editForm.addEventListener("submit", (e) => this.saveProfile(e));
+                }
+                
+                // Real-time validation for all fields
+                const inputs = [
+                    { id: 'editName', validate: this.validateName, errorId: 'nameError', message: 'Full name must be at least 2 characters' },
+                    { id: 'editRollNo', validate: this.validateRollNo, errorId: 'rollNoError', message: 'Roll number is required' },
+                    { id: 'editEmail', validate: this.validateEmail, errorId: 'emailError', message: 'Please enter a valid email address' },
+                    { id: 'editPhone', validate: this.validatePhone, errorId: 'phoneError', message: 'Please enter a valid phone number (10-15 digits)' },
+                    { id: 'editDOB', validate: this.validateDate, errorId: 'dobError', message: 'Date cannot be in the future' },
+                    { id: 'editEmergencyContact', validate: this.validateEmergencyContact, errorId: 'emergencyContactError', message: 'Format: Name - 10-15 digit phone number' },
+                    { id: 'editDepartment', validate: this.validateDepartment, errorId: 'departmentError', message: 'Department is required' },
+                    { id: 'editEnrollmentDate', validate: this.validateDate, errorId: 'enrollmentDateError', message: 'Enrollment date cannot be in the future' }
+                ];
+                
+                inputs.forEach(inputConfig => {
+                    const input = document.getElementById(inputConfig.id);
+                    if (input) {
+                        input.addEventListener('blur', () => {
+                            const value = input.value;
+                            if (value || inputConfig.id === 'editDepartment' || inputConfig.id === 'editName' || 
+                                inputConfig.id === 'editRollNo' || inputConfig.id === 'editEmail' || 
+                                inputConfig.id === 'editPhone' || inputConfig.id === 'editYear') {
+                                if (inputConfig.validate(value)) {
+                                    input.classList.remove('error');
+                                    document.getElementById(inputConfig.errorId).classList.remove('show');
+                                } else {
+                                    input.classList.add('error');
+                                    document.getElementById(inputConfig.errorId).classList.add('show');
+                                }
+                            }
+                        });
+                        
+                        // Clear error on input
+                        input.addEventListener('input', () => {
+                            input.classList.remove('error');
+                            document.getElementById(inputConfig.errorId).classList.remove('show');
+                        });
+                    }
+                });
+                
+                // Special handling for year select
+                const yearSelect = document.getElementById('editYear');
+                if (yearSelect) {
+                    yearSelect.addEventListener('change', () => {
+                        const value = yearSelect.value;
+                        if (this.validateYear(value)) {
+                            yearSelect.classList.remove('error');
+                            document.getElementById('yearError').classList.remove('show');
+                        } else {
+                            yearSelect.classList.add('error');
+                            document.getElementById('yearError').classList.add('show');
+                        }
+                    });
+                }
+                
+                // Close modals when clicking outside
+                document.addEventListener('click', (event) => {
+                    const logoutModal = document.getElementById("logoutConfirmModal");
+                    const editModal = document.getElementById("editProfileModal");
+                    
+                    if (event.target === logoutModal) {
+                        this.closeLogoutConfirm();
+                    }
+                    if (event.target === editModal) {
+                        this.closeEditModal();
+                    }
+                });
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        this.closeEditModal();
+                        this.closeLogoutConfirm();
+                    }
+                });
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            StudentProfile.init();
+        });
+
+        // Make manager accessible globally
+        window.StudentProfile = StudentProfile;
+    </script>
+</body>
+</html>

@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bulk Upload - Admin Panel</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        button, select {
+            cursor: pointer;
+        }
+
+        /* ===== Common Components ===== */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 90%;
+            width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, .2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h3 {
+            color: #2a5298;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Card Header ===== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-header h2 {
+            color: #2a5298;
+            font-size: 1.5rem;
+        }
+
+        /* ===== Upload Form ===== */
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #2a5298;
+            background: #f0f4ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .upload-text {
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .upload-subtext {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* ===== Upload Type Selector ===== */
+        .upload-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .upload-type-btn {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .upload-type-btn:hover {
+            border-color: #2a5298;
+            color: #2a5298;
+            transform: translateY(-2px);
+        }
+
+        .upload-type-btn.active {
+            border-color: #2a5298;
+            background: #e8edf5;
+            color: #2a5298;
+        }
+
+        .upload-type-btn .type-icon {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        /* ===== Progress Bar ===== */
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #2a5298);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 12px;
+        }
+
+        .progress-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        /* ===== Result Container ===== */
+        .result-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .result-container.success {
+            background: #f0fff4;
+            border: 1px solid #86efac;
+        }
+
+        .result-container.error {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .result-stat {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+        }
+
+        .result-stat .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .result-stat .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .result-stat.success .stat-number {
+            color: #16a34a;
+        }
+
+        .result-stat.error .stat-number {
+            color: #dc2626;
+        }
+
+        /* ===== Error List ===== */
+        .error-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fef2f2;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #991b1b;
+        }
+
+        .error-list ul {
+            padding-left: 20px;
+            margin: 5px 0;
+        }
+
+        .error-list li {
+            margin-bottom: 3px;
+        }
+
+        /* ===== Template Download ===== */
+        .template-download {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .template-download .template-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .template-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* ===== Upload History ===== */
+        .upload-history {
+            margin-top: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 700px;
+        }
+
+        .history-table th {
+            background: #2a5298;
+            color: #fff;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .history-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .history-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .history-table .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* ===== Logout Modal ===== */
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-col {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 500px;
+            }
+            .upload-type-selector {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .history-table {
+                font-size: 12px;
+                min-width: 600px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+            .card-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            .upload-type-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .upload-area {
+                padding: 20px;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            .result-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .template-buttons {
+                flex-direction: column;
+            }
+            .template-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .history-table {
+                font-size: 11px;
+                min-width: 500px;
+            }
+            .history-table th, .history-table td {
+                padding: 6px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation">
+        <h2>Admin Panel</h2>
+        <a href="/admin-dashboard">🏠 Home</a>
+        <a href="/students">👨‍🎓 Students</a>
+        <a href="/exams">📝 Exams</a>
+        <a href="/rooms">🏫 Rooms</a>
+        <a href="/invigilators">👨‍🏫 Invigilators</a>
+        <a href="/generate-seating">🔄 Generate Seating</a>
+        <a href="/view-seating">👀 View Seating</a>
+        <a href="/charts">📊 Charts</a>
+        <a href="/bulk-upload" class="active">📤 Bulk Upload</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h3>Bulk Upload</h3>
+            <button type="button" class="btn btn-danger" onclick="BulkUploadManager.openLogoutConfirm()">
+                🚪 Logout
+            </button>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Bulk Upload Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>📤 Bulk Upload</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span id="currentTime" style="font-size: 14px; color: #6b7280;"></span>
+                </div>
+            </div>
+
+            <!-- Upload Type Selector -->
+            <div class="upload-type-selector" id="uploadTypeSelector">
+                <button class="upload-type-btn active" data-type="students" onclick="BulkUploadManager.selectType('students')">
+                    <span class="type-icon">👨‍🎓</span>
+                    Students
+                </button>
+                <button class="upload-type-btn" data-type="rooms" onclick="BulkUploadManager.selectType('rooms')">
+                    <span class="type-icon">🏫</span>
+                    Rooms
+                </button>
+                <button class="upload-type-btn" data-type="exams" onclick="BulkUploadManager.selectType('exams')">
+                    <span class="type-icon">📝</span>
+                    Exams
+                </button>
+                <button class="upload-type-btn" data-type="subjects" onclick="BulkUploadManager.selectType('subjects')">
+                    <span class="type-icon">📚</span>
+                    Subjects
+                </button>
+                <button class="upload-type-btn" data-type="invigilators" onclick="BulkUploadManager.selectType('invigilators')">
+                    <span class="type-icon">👨‍🏫</span>
+                    Invigilators
+                </button>
+            </div>
+
+            <!-- Upload Area -->
+            <div class="upload-area" id="uploadArea">
+                <span class="upload-icon">📤</span>
+                <div class="upload-text">Drag and drop your Excel file here</div>
+                <div class="upload-subtext">or click to browse</div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="BulkUploadManager.handleFileSelect(event)">
+            </div>
+
+            <!-- Extra Fields -->
+            <div id="extraFields" style="margin-top: 15px; display: none;">
+                <!-- Dynamic fields will be added here -->
+            </div>
+
+            <!-- Upload Button -->
+            <div style="margin-top: 15px; text-align: center;">
+                <button class="btn btn-success" id="uploadBtn" onclick="BulkUploadManager.uploadFile()" style="padding: 12px 40px; font-size: 16px;">
+                    ⬆️ Upload & Process
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                    <div class="progress-text" id="progressText">0%</div>
+                </div>
+                <div style="text-align: center; margin-top: 8px; color: #6b7280; font-size: 13px;">
+                    <span id="progressStatus">Processing...</span>
+                </div>
+            </div>
+
+            <!-- Result Container -->
+            <div class="result-container" id="resultContainer">
+                <div id="resultContent"></div>
+            </div>
+
+            <!-- Template Download -->
+            <div class="template-download">
+                <span class="template-label">📄 Download Template for Selected Upload Type:</span>
+                <div class="template-buttons">
+                    <button class="btn btn-info" onclick="BulkUploadManager.downloadTemplate()">
+                        📥 Download Template
+                    </button>
+                    <button class="btn btn-secondary" onclick="BulkUploadManager.viewSampleData()">
+                        👁️ View Sample Format
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upload History -->
+        <section class="card">
+            <div class="card-header">
+                <h2>📋 Upload History</h2>
+                <button class="btn btn-secondary" onclick="BulkUploadManager.refreshHistory()">
+                    🔄 Refresh
+                </button>
+            </div>
+
+            <div class="upload-history">
+                <div class="table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>File Name</th>
+                                <th>Type</th>
+                                <th>Records</th>
+                                <th>Success</th>
+                                <th>Failed</th>
+                                <th>Status</th>
+                                <th>Uploaded At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #6b7280; padding: 20px;">
+                                    No upload history found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn btn-cancel" onclick="BulkUploadManager.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-logout" onclick="BulkUploadManager.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Sample Modal -->
+    <div class="modal" id="sampleModal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <h3>📋 Sample Data Format</h3>
+            <div id="sampleContent" style="margin: 15px 0; overflow-x: auto;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="BulkUploadManager.closeSampleModal()">
+                    ✕ Close
+                </button>
+                <button class="btn btn-primary" onclick="BulkUploadManager.downloadTemplate()">
+                    📥 Download Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 Exam Seating Arrangement System
+    </footer>
+
+    <script>
+        // Configuration - Updated to match actual backend endpoints
+        const BulkConfig = {
+            API_BASE: "/api/admin/bulk-upload",
+            TOAST_DURATION: 3500,
+            UPLOAD_TYPES: {
+                'students': {
+                    label: 'Students',
+                    icon: '👨‍🎓',
+                    endpoint: '/students',
+                    fields: ['Roll No', 'Name', 'Email', 'Phone', 'Department', 'Year', 'Current Semester', 'Gender'],
+                    sample: [
+                        ['2024001', 'John Doe', 'john.doe@email.com', '9876543210', 'CSE', '1', '2', 'MALE'],
+                        ['2024002', 'Jane Smith', 'jane.smith@email.com', '9876543211', 'CSE', '1', '2', 'FEMALE']
+                    ]
+                },
+                'rooms': {
+                    label: 'Rooms',
+                    icon: '🏫',
+                    endpoint: '/rooms',
+                    fields: ['Room Code', 'Room Name', 'Capacity', 'Rows', 'Columns', 'Location'],
+                    sample: [
+                        ['R101', 'Room 101', '40', '5', '8', 'Building A, Floor 1'],
+                        ['R102', 'Room 102', '30', '5', '6', 'Building A, Floor 1']
+                    ]
+                },
+                'exams': {
+                    label: 'Exams',
+                    icon: '📝',
+                    endpoint: '/exams',
+                    fields: ['Exam Name', 'Exam Code', 'Start Date', 'End Date', 'Year', 'Semester', 'Status'],
+                    sample: [
+                        ['Final Examination', 'FINAL-2026', '2026-06-30', '2026-07-05', '1', '2', 'UPCOMING'],
+                        ['Mid-Term Examination', 'MID-2026', '2026-05-15', '2026-05-20', '1', '2', 'COMPLETED']
+                    ]
+                },
+                'subjects': {
+                    label: 'Subjects',
+                    icon: '📚',
+                    endpoint: '/subjects',
+                    fields: ['Subject Name', 'Subject Code', 'Exam Date', 'Start Time', 'End Time', 'Duration (mins)', 'Total Marks', 'Exam Code'],
+                    sample: [
+                        ['Introduction to Programming', 'CS101', '2026-06-30', '09:00', '10:30', '90', '100', 'FINAL-2026'],
+                        ['Data Structures', 'CS102', '2026-07-01', '11:00', '12:30', '90', '100', 'FINAL-2026']
+                    ]
+                },
+                'invigilators': {
+                    label: 'Invigilators',
+                    icon: '👨‍🏫',
+                    endpoint: '/invigilators',
+                    fields: ['Employee ID', 'Name', 'Phone', 'Email', 'Department'],
+                    sample: [
+                        ['EMP001', 'Dr. Smith', '9876543210', 'smith@university.edu', 'CSE'],
+                        ['EMP002', 'Prof. Jones', '9876543211', 'jones@university.edu', 'ECE']
+                    ]
+                }
+            }
+        };
+
+        // Toast Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, BulkConfig.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+        }
+
+        // Modal Manager
+        class ModalManager {
+            static open(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                }
+            }
+            
+            static close(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                }
+            }
+        }
+
+        // Bulk Upload Manager
+        class BulkUploadManager {
+            static currentType = 'students';
+            static selectedFile = null;
+            static uploadHistory = [];
+
+            static init() {
+                this.updateCurrentTime();
+                this.setupDragAndDrop();
+                this.loadHistory();
+                this.updateExtraFields();
+            }
+
+            static selectType(type) {
+                this.currentType = type;
+                
+                document.querySelectorAll('.upload-type-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.type === type) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                this.updateExtraFields();
+                this.clearResults();
+                ToastManager.info(`Selected: ${BulkConfig.UPLOAD_TYPES[type].label}`);
+            }
+
+            static updateExtraFields() {
+                const container = document.getElementById('extraFields');
+                const type = this.currentType;
+                
+                let html = '';
+                
+                if (type === 'students') {
+                    html = `
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Department (Optional):</label>
+                                <select id="departmentFilter" class="form-control">
+                                    <option value="">Auto-detect from file</option>
+                                    <option value="CSE">CSE</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="EEE">EEE</option>
+                                    <option value="MECH">MECH</option>
+                                    <option value="CIVIL">CIVIL</option>
+                                    <option value="IT">IT</option>
+                                    <option value="MBA">MBA</option>
+                                    <option value="MCA">MCA</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Year (Optional):</label>
+                                <select id="yearFilter" class="form-control">
+                                    <option value="">Auto-detect from file</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = html;
+                container.style.display = type === 'students' ? 'block' : 'none';
+            }
+
+            static setupDragAndDrop() {
+                const uploadArea = document.getElementById('uploadArea');
+                
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                
+                uploadArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                });
+                
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    
+                    if (e.dataTransfer.files.length > 0) {
+                        this.handleFileSelect({ target: { files: e.dataTransfer.files } });
+                    }
+                });
+            }
+
+            static handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/)) {
+                    ToastManager.error('Please upload an Excel file (.xlsx or .xls)');
+                    document.getElementById('fileInput').value = '';
+                    return;
+                }
+                
+                this.selectedFile = file;
+                
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.querySelector('.upload-text').textContent = `📄 ${file.name}`;
+                uploadArea.querySelector('.upload-subtext').textContent = `${(file.size / 1024).toFixed(1)} KB • ${file.type}`;
+                
+                ToastManager.success(`File selected: ${file.name}`);
+            }
+
+            static async uploadFile() {
+                if (!this.selectedFile) {
+                    ToastManager.warning('Please select a file first');
+                    return;
+                }
+
+                const uploadBtn = document.getElementById('uploadBtn');
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = '⏳ Uploading...';
+
+                const progressContainer = document.getElementById('progressContainer');
+                const progressFill = document.getElementById('progressFill');
+                const progressText = document.getElementById('progressText');
+                const progressStatus = document.getElementById('progressStatus');
+                
+                progressContainer.style.display = 'block';
+                this.clearResults();
+
+                const formData = new FormData();
+                formData.append('file', this.selectedFile);
+
+                if (this.currentType === 'students') {
+                    const department = document.getElementById('departmentFilter')?.value;
+                    const year = document.getElementById('yearFilter')?.value;
+                    if (department) formData.append('department', department);
+                    if (year) formData.append('year', year);
+                }
+
+                try {
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += Math.random() * 10;
+                        if (progress > 90) progress = 90;
+                        progressFill.style.width = progress + '%';
+                        progressText.textContent = Math.round(progress) + '%';
+                        progressStatus.textContent = `Uploading... ${Math.round(progress)}%`;
+                    }, 300);
+
+                    const endpoint = BulkConfig.UPLOAD_TYPES[this.currentType].endpoint;
+                    const response = await fetch(`${BulkConfig.API_BASE}${endpoint}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    clearInterval(interval);
+                    
+                    progressFill.style.width = '100%';
+                    progressText.textContent = '100%';
+                    progressStatus.textContent = 'Processing complete!';
+
+                    const result = await response.json();
+
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        this.displayResult(result);
+                        
+                        if (result.success) {
+                            ToastManager.success('Upload completed successfully!');
+                            this.loadHistory();
+                        } else {
+                            ToastManager.error('Upload failed: ' + (result.message || 'Unknown error'));
+                        }
+                    }, 500);
+
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    progressStatus.textContent = '❌ Upload failed';
+                    ToastManager.error('Upload failed: ' + error.message);
+                    
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        this.displayError(error.message);
+                    }, 1000);
+                } finally {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = '⬆️ Upload & Process';
+                }
+            }
+
+            static displayResult(result) {
+                const container = document.getElementById('resultContainer');
+                const content = document.getElementById('resultContent');
+                
+                container.style.display = 'block';
+                
+                if (result.success) {
+                    container.className = 'result-container success';
+                    content.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                            <span style="font-size: 24px;">✅</span>
+                            <h4 style="color: #065f46; margin: 0;">Upload Successful!</h4>
+                        </div>
+                        <div class="result-stats">
+                            <div class="result-stat success">
+                                <div class="stat-number">${result.total || 0}</div>
+                                <div class="stat-label">Total Records</div>
+                            </div>
+                            <div class="result-stat success">
+                                <div class="stat-number">${result.successCount || 0}</div>
+                                <div class="stat-label">✅ Success</div>
+                            </div>
+                            <div class="result-stat error">
+                                <div class="stat-number">${result.failureCount || 0}</div>
+                                <div class="stat-label">❌ Failed</div>
+                            </div>
+                        </div>
+                        ${result.errors && result.errors.length > 0 ? `
+                            <div class="error-list">
+                                <strong>Error Details:</strong>
+                                <ul>
+                                    ${result.errors.slice(0, 20).map(err => `<li>${err}</li>`).join('')}
+                                    ${result.errors.length > 20 ? `<li>... and ${result.errors.length - 20} more errors</li>` : ''}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        <div style="margin-top: 10px; color: #6b7280; font-size: 13px;">
+                            File: ${this.selectedFile?.name || 'Unknown'}
+                        </div>
+                    `;
+                } else {
+                    this.displayError(result.message || 'Upload failed');
+                }
+            }
+
+            static displayError(message) {
+                const container = document.getElementById('resultContainer');
+                const content = document.getElementById('resultContent');
+                
+                container.style.display = 'block';
+                container.className = 'result-container error';
+                content.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <span style="font-size: 24px;">❌</span>
+                        <h4 style="color: #991b1b; margin: 0;">Upload Failed</h4>
+                    </div>
+                    <p style="color: #991b1b;">${message}</p>
+                    <div style="margin-top: 10px; color: #6b7280; font-size: 13px;">
+                        File: ${this.selectedFile?.name || 'Unknown'}
+                    </div>
+                `;
+            }
+
+            static clearResults() {
+                const container = document.getElementById('resultContainer');
+                container.style.display = 'none';
+                container.className = 'result-container';
+                document.getElementById('resultContent').innerHTML = '';
+            }
+
+            static downloadTemplate() {
+                const type = this.currentType;
+                const config = BulkConfig.UPLOAD_TYPES[type];
+                
+                let csv = config.fields.join(',') + '\n';
+                config.sample.forEach(row => {
+                    csv += row.join(',') + '\n';
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${type}_template.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                
+                ToastManager.success(`Template downloaded: ${type}_template.csv`);
+            }
+
+            static viewSampleData() {
+                const type = this.currentType;
+                const config = BulkConfig.UPLOAD_TYPES[type];
+                
+                let html = `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                        <strong style="color: #2a5298;">${config.icon} ${config.label}</strong>
+                        <p style="color: #6b7280; margin-top: 5px; font-size: 13px;">
+                            Expected columns in order:
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                            ${config.fields.map((field, i) => `
+                                <span style="background: #e5e7eb; padding: 2px 10px; border-radius: 4px; font-size: 12px;">
+                                    ${i + 1}. ${field}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #2a5298; color: white;">
+                                    ${config.fields.map(field => `<th style="padding: 8px 10px; text-align: left;">${field}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${config.sample.map(row => `
+                                    <tr>
+                                        ${row.map(cell => `<td style="padding: 6px 10px; border-bottom: 1px solid #e5e7eb;">${cell}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 10px; color: #6b7280; font-size: 12px;">
+                        <strong>Note:</strong> The first row should contain column headers as shown above.
+                    </div>
+                `;
+                
+                document.getElementById('sampleContent').innerHTML = html;
+                ModalManager.open('sampleModal');
+            }
+
+            static closeSampleModal() {
+                ModalManager.close('sampleModal');
+            }
+
+            static async loadHistory() {
+                try {
+                    const response = await fetch('/api/admin/uploads/history');
+                    if (response.ok) {
+                        this.uploadHistory = await response.json();
+                    } else {
+                        this.uploadHistory = [];
+                    }
+                    this.renderHistory();
+                } catch (error) {
+                    console.error('Failed to load history:', error);
+                    this.uploadHistory = [];
+                    this.renderHistory();
+                }
+            }
+
+            static renderHistory() {
+                const tbody = document.getElementById('historyBody');
+                
+                if (this.uploadHistory.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #6b7280; padding: 20px;">
+                                No upload history found.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                const typeLabels = {
+                    'students': 'Students',
+                    'rooms': 'Rooms',
+                    'exams': 'Exams',
+                    'subjects': 'Subjects',
+                    'invigilators': 'Invigilators'
+                };
+                
+                tbody.innerHTML = this.uploadHistory.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.fileName}</td>
+                        <td>${typeLabels[item.type] || item.type}</td>
+                        <td>${item.total}</td>
+                        <td style="color: #16a34a;">${item.success}</td>
+                        <td style="color: #dc2626;">${item.failed}</td>
+                        <td>
+                            <span class="status-badge ${item.status === 'SUCCESS' ? 'success' : item.status === 'FAILED' ? 'failed' : 'pending'}">
+                                ${item.status}
+                            </span>
+                        </td>
+                        <td>${item.uploadedAt}</td>
+                    </tr>
+                `).join('');
+            }
+
+            static refreshHistory() {
+                ToastManager.info('Refreshing history...');
+                this.loadHistory();
+            }
+
+            static updateCurrentTime() {
+                const updateTime = () => {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit'
+                    });
+                    const dateString = now.toLocaleDateString([], {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    document.getElementById("currentTime").textContent = `${dateString} • ${timeString}`;
+                };
+                updateTime();
+                setInterval(updateTime, 60000);
+            }
+
+            static openLogoutConfirm() {
+                ModalManager.open("logoutConfirmModal");
+            }
+
+            static closeLogoutConfirm() {
+                ModalManager.close("logoutConfirmModal");
+            }
+
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            BulkUploadManager.init();
+        });
+
+        // Make manager accessible globally
+        window.BulkUploadManager = BulkUploadManager;
+        window.ToastManager = ToastManager;
+        window.ModalManager = ModalManager;
+    </script>
+</body>
+</html>

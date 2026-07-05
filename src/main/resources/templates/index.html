@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Exam Seating Arrangement System</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: 'Segoe UI', sans-serif;
+}
+
+/* Navbar */
+.navbar {
+	height: 60px;
+	background: #083a6b;
+	color: white;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0 30px;
+}
+
+.navbar .logo {
+	font-size: 20px;
+	font-weight: 600;
+}
+
+.navbar a {
+	color: white;
+	text-decoration: none;
+	margin-left: 20px;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+/* Hero */
+.hero {
+	position: relative;
+	height: calc(100vh - 60px);
+	display: flex;
+	align-items: center;
+	padding: 60px;
+	color: white;
+	overflow: hidden;
+}
+
+.hero-slider {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+}
+
+.hero-slide {
+	position: absolute;
+	inset: 0;
+	background-size: cover;
+	background-position: center;
+	opacity: 0;
+	transition: opacity 1.2s ease-in-out;
+}
+
+.hero-slide.active {
+	opacity: 1;
+}
+
+.hero-overlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 40, 80, 0.75);
+	z-index: 2;
+}
+
+.hero-content {
+	position: relative;
+	z-index: 3;
+	max-width: 600px;
+}
+
+.hero h1 {
+	font-size: 42px;
+	margin-bottom: 15px;
+}
+
+.hero p {
+	font-size: 16px;
+	margin-bottom: 25px;
+}
+
+.success-message {
+	color: #16a34a;
+	font-size: 12px;
+	margin-bottom: 10px;
+	display: none;
+}
+
+.hero button {
+	background: #198754;
+	border: none;
+	padding: 12px 22px;
+	color: white;
+	border-radius: 6px;
+	cursor: pointer;
+}
+
+/* Modal */
+.modal {
+	display: none;
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+
+.login-card {
+	position: relative;
+	background: white;
+	width: 380px;
+	padding: 25px;
+	border-radius: 12px;
+}
+
+.close-mark {
+	position: absolute;
+	top: 10px;
+	right: 12px;
+	font-size: 18px;
+	cursor: pointer;
+}
+
+.login-card h2 {
+	margin-bottom: 20px;
+	color: #083a6b;
+}
+
+.login-card input {
+	width: 100%;
+	padding: 10px;
+	margin-bottom: 5px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+.login-card button {
+	width: 100%;
+	padding: 10px;
+	background: #0f766e;
+	color: white;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	margin-top: 10px;
+}
+
+.link {
+	text-align: center;
+	margin-top: 10px;
+	font-size: 13px;
+	color: #0f766e;
+	cursor: pointer;
+}
+
+.password-wrapper {
+	position: relative;
+}
+
+.password-toggle {
+	position: absolute;
+	right: 14px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	color: #0f766e;
+	user-select: none;
+}
+
+/* Toast */
+.toast {
+	position: fixed;
+	top: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	padding: 14px 22px;
+	border-radius: 8px;
+	color: white;
+	opacity: 0;
+	transition: 0.4s;
+	z-index: 2000;
+}
+
+.toast.show {
+	opacity: 1;
+	top: 40px;
+}
+
+.toast.success {
+	background: #16a34a;
+}
+
+.toast.error {
+	background: #dc2626;
+}
+
+/* Error messages */
+.error-message {
+	color: #dc2626;
+	font-size: 12px;
+	margin-bottom: 10px;
+	display: none;
+}
+
+.input-error {
+	border-color: #dc2626 !important;
+}
+
+/* Loading spinner */
+.spinner {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	border-radius: 50%;
+	border-top-color: white;
+	animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+.btn-loading {
+	opacity: 0.7;
+	cursor: not-allowed !important;
+}
+
+/* Success checkmark */
+.checkmark {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	margin-right: 5px;
+}
+
+.checkmark:after {
+	content: '';
+	display: block;
+	width: 5px;
+	height: 10px;
+	border: solid white;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+/* Footer */
+.footer {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 45px;
+	background: #083a6b;
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	z-index: 999;
+}
+</style>
+
+<script>
+// ============== CONFIGURATION ==============
+const MODAL_CONFIG = {
+    STUDENT_LOGIN: { id: 'studentModal', formId: 'studentLoginForm', role: 'STUDENT' },
+    STUDENT_UPDATE: { id: 'studentUpdateModal', formId: 'studentUpdateForm', role: 'STUDENT' },
+    ADMIN_LOGIN: { id: 'adminModal', formId: 'adminLoginForm', role: 'ADMIN' },
+    INV_LOGIN: { id: 'invModal', formId: 'invLoginForm', role: 'INVIGILATOR' },
+    ADMIN_UPDATE: { id: 'adminUpdateModal', formId: 'adminUpdateForm', role: 'ADMIN' },
+    INV_UPDATE: { id: 'invUpdateModal', formId: 'invUpdateForm', role: 'INVIGILATOR' },
+    ADMIN_KEY: { id: 'adminKeyModal' },
+    ADMIN_REGISTER: { id: 'adminRegisterModal', formId: 'adminRegisterForm' }
+};
+
+const SLIDE_IMAGES = [
+    'https://images.unsplash.com/photo-1523240795612-9a054b0db644',
+    'https://images.unsplash.com/photo-1588072432836-e10032774350',
+    'https://images.unsplash.com/photo-1509062522246-3755977927d7',
+    'https://images.unsplash.com/photo-1523050854058-8df90110c9f1',
+    'https://images.unsplash.com/photo-1498079022511-d15614cb1c02',
+    'https://images.unsplash.com/photo-1607013400311-5b7c9e0d8f92'
+];
+
+// ============== UTILITY FUNCTIONS ==============
+class UIUtils {
+    static showToast(type, message) {
+        const toast = document.getElementById('toast');
+        toast.className = `toast ${type} show`;
+        toast.textContent = message;
+        setTimeout(() => toast.className = 'toast', 3000);
+    }
+
+    static showError(inputId, message) {
+        const errorEl = document.getElementById(`${inputId}-error`);
+        const inputEl = document.getElementById(inputId);
+        
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        if (inputEl) {
+            inputEl.classList.add('input-error');
+        }
+    }
+
+    static clearError(inputId) {
+        const errorEl = document.getElementById(`${inputId}-error`);
+        const inputEl = document.getElementById(inputId);
+        
+        if (errorEl) errorEl.style.display = 'none';
+        if (inputEl) inputEl.classList.remove('input-error');
+    }
+
+    static openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        
+        modal.style.display = 'flex';
+        this.applyPasswordToggles();
+        
+        // Clear errors when opening a modal
+        modal.querySelectorAll('.error-message').forEach(err => {
+            err.style.display = 'none';
+        });
+        modal.querySelectorAll('.input-error').forEach(input => {
+            input.classList.remove('input-error');
+        });
+    }
+
+    static closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        modal.style.display = 'none';
+        
+        // Clear all inputs and errors in the modal
+        modal.querySelectorAll('input').forEach(input => {
+            input.value = '';
+            input.classList.remove('input-error');
+        });
+        modal.querySelectorAll('.error-message').forEach(err => {
+            err.style.display = 'none';
+        });
+    }
+
+    static applyPasswordToggles() {
+        document.querySelectorAll('input[type="password"]').forEach(input => {
+            let wrapper = input.parentNode.classList.contains('password-wrapper') 
+                ? input.parentNode 
+                : (() => {
+                    const w = document.createElement('div');
+                    w.className = 'password-wrapper';
+                    input.parentNode.insertBefore(w, input);
+                    w.appendChild(input);
+                    return w;
+                })();
+
+            if (wrapper.querySelector('.password-toggle')) return;
+
+            input.style.paddingRight = '70px';
+            
+            const toggle = document.createElement('span');
+            toggle.className = 'password-toggle';
+            toggle.textContent = 'Show';
+            
+            toggle.onclick = () => {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    toggle.textContent = 'Hide';
+                } else {
+                    input.type = 'password';
+                    toggle.textContent = 'Show';
+                }
+            };
+            
+            wrapper.appendChild(toggle);
+        });
+    }
+    
+    static clearLoginForm(role) {
+        let loginModalId = '';
+        if (role === 'ADMIN') loginModalId = 'adminModal';
+        else if (role === 'INVIGILATOR') loginModalId = 'invModal';
+        else if (role === 'STUDENT') loginModalId = 'studentModal';
+        
+        const loginModal = document.getElementById(loginModalId);
+        if (loginModal) {
+            loginModal.querySelectorAll('input').forEach(input => {
+                input.value = '';
+                input.classList.remove('input-error');
+            });
+            loginModal.querySelectorAll('.error-message').forEach(err => {
+                err.style.display = 'none';
+            });
+        }
+    }
+}
+
+class FormValidator {
+    static validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    static validatePassword(password) {
+        return password.length >= 6;
+    }
+
+    static async checkEmailExists(email, role) {
+        try {
+            const res = await fetch('/api/auth/check-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, role })
+            });
+            if (!res.ok) return false;
+            const data = await res.json();
+            return data.exists;
+        } catch (error) {
+            console.error('Email check failed:', error);
+            UIUtils.showToast('error', 'Unable to verify email. Check server connection.');
+            return null;
+        }
+    }
+
+    static validateRegistration(formData) {
+        const errors = {};
+        
+        if (!formData.name?.trim()) errors.name = 'Name is required';
+        
+        if (!formData.email?.trim()) {
+            errors.email = 'Email is required';
+        } else if (!this.validateEmail(formData.email)) {
+            errors.email = 'Invalid email format';
+        }
+        
+        if (!formData.password) {
+            errors.password = 'Password is required';
+        } else if (!this.validatePassword(formData.password)) {
+            errors.password = 'Minimum 6 characters required';
+        }
+        
+        if (!formData.confirmPassword) {
+            errors.confirmPassword = 'Confirm your password';
+        } else if (formData.confirmPassword !== formData.password) {
+            errors.confirmPassword = 'Passwords do not match';
+        }
+        
+        return errors;
+    }
+}
+
+// ============== FORM HANDLERS ==============
+class FormHandler {
+    static async handleLogin(formId, role) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        const emailInput = form.querySelector('input[name="email"]');
+        const passwordInput = form.querySelector('input[name="password"]');
+
+        // Email validation
+        if (emailInput) {
+            emailInput.addEventListener('blur', async () => {
+                if (!emailInput.value) {
+                    UIUtils.showError(emailInput.id, 'Email is required');
+                    return;
+                }
+                if (!FormValidator.validateEmail(emailInput.value)) {
+                    UIUtils.showError(emailInput.id, 'Invalid email format');
+                    return;
+                }
+                
+                const exists = await FormValidator.checkEmailExists(emailInput.value, role);
+                if (exists === false) {
+                    UIUtils.showError(emailInput.id, 'Email not found in our system');
+                } else {
+                    UIUtils.clearError(emailInput.id);
+                }
+            });
+        }
+
+        // Password validation
+        if (passwordInput) {
+            passwordInput.addEventListener('blur', () => {
+                if (!passwordInput.value) {
+                    UIUtils.showError(passwordInput.id, 'Password is required');
+                } else {
+                    UIUtils.clearError(passwordInput.id);
+                }
+            });
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let isValid = true;
+            
+            if (!emailInput || !emailInput.value || !FormValidator.validateEmail(emailInput.value)) {
+                UIUtils.showError(emailInput?.id || 'email', 'Valid email is required');
+                isValid = false;
+            }
+            
+            if (!passwordInput || !passwordInput.value) {
+                UIUtils.showError(passwordInput?.id || 'password', 'Password is required');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                if (res.url.includes('error')) {
+                    UIUtils.showToast('error', 'Invalid email or password');
+                } else if (res.url.includes('dashboard')) {
+                    window.location.href = res.url;
+                } else if (res.url.includes('student')) {
+                    window.location.href = res.url;
+                } else {
+                    UIUtils.showToast('error', 'Unexpected login response');
+                }
+            } catch {
+                UIUtils.showToast('error', 'Server unavailable');
+            }
+        });
+    }
+
+    static handlePasswordUpdate(formId, role) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        const fields = ['email', 'currentPassword', 'newPassword', 'confirmPassword'];
+        
+        // First, ensure all inputs have IDs for error targeting
+        fields.forEach(field => {
+            const input = form.querySelector(`input[name="${field}"]`);
+            if (input && !input.id) {
+                input.id = `${formId}-${field}`;
+            }
+        });
+
+        // Create error message elements if they don't exist
+        fields.forEach(field => {
+            const input = form.querySelector(`input[name="${field}"]`);
+            if (input && !document.getElementById(`${input.id}-error`)) {
+                const errorDiv = document.createElement('div');
+                errorDiv.id = `${input.id}-error`;
+                errorDiv.className = 'error-message';
+                input.parentNode.insertBefore(errorDiv, input.nextSibling);
+            }
+        });
+
+        // Get input elements
+        const emailInput = form.querySelector('input[name="email"]');
+        const currentPassInput = form.querySelector('input[name="currentPassword"]');
+        const newPassInput = form.querySelector('input[name="newPassword"]');
+        const confirmPassInput = form.querySelector('input[name="confirmPassword"]');
+
+        // Email validation
+        if (emailInput) {
+            emailInput.addEventListener('blur', async function() {
+                if (!this.value) {
+                    UIUtils.showError(this.id, 'Email is required');
+                    return;
+                }
+                if (!FormValidator.validateEmail(this.value)) {
+                    UIUtils.showError(this.id, 'Invalid email format');
+                    return;
+                }
+                
+                const exists = await FormValidator.checkEmailExists(this.value, role);
+                if (exists === false) {
+                    UIUtils.showError(this.id, 'Email not found in our system');
+                } else {
+                    UIUtils.clearError(this.id);
+                }
+            });
+        }
+
+        // Current password validation
+        if (currentPassInput) {
+            currentPassInput.addEventListener('blur', function() {
+                if (!this.value) {
+                    UIUtils.showError(this.id, 'Current password is required');
+                } else if (!FormValidator.validatePassword(this.value)) {
+                    UIUtils.showError(this.id, 'Password must be at least 6 characters');
+                } else {
+                    UIUtils.clearError(this.id);
+                }
+            });
+        }
+
+        // New password validation
+        if (newPassInput) {
+            newPassInput.addEventListener('blur', function() {
+                if (!this.value) {
+                    UIUtils.showError(this.id, 'New password is required');
+                } else if (!FormValidator.validatePassword(this.value)) {
+                    UIUtils.showError(this.id, 'Password must be at least 6 characters');
+                } else if (currentPassInput && this.value === currentPassInput.value) {
+                    UIUtils.showError(this.id, 'New password must be different from current password');
+                } else {
+                    UIUtils.clearError(this.id);
+                }
+            });
+        }
+
+        // Confirm password validation
+        if (confirmPassInput) {
+            confirmPassInput.addEventListener('blur', function() {
+                if (!this.value) {
+                    UIUtils.showError(this.id, 'Please confirm your password');
+                } else if (newPassInput && this.value !== newPassInput.value) {
+                    UIUtils.showError(this.id, 'Passwords do not match');
+                } else {
+                    UIUtils.clearError(this.id);
+                }
+            });
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let isValid = true;
+            let errors = {};
+            
+            // Validate all fields
+            if (!emailInput || !emailInput.value) {
+                errors.email = 'Email is required';
+                isValid = false;
+            } else if (!FormValidator.validateEmail(emailInput.value)) {
+                errors.email = 'Invalid email format';
+                isValid = false;
+            }
+            
+            if (!currentPassInput || !currentPassInput.value) {
+                errors.currentPassword = 'Current password is required';
+                isValid = false;
+            } else if (!FormValidator.validatePassword(currentPassInput.value)) {
+                errors.currentPassword = 'Password must be at least 6 characters';
+                isValid = false;
+            }
+            
+            if (!newPassInput || !newPassInput.value) {
+                errors.newPassword = 'New password is required';
+                isValid = false;
+            } else if (!FormValidator.validatePassword(newPassInput.value)) {
+                errors.newPassword = 'Password must be at least 6 characters';
+                isValid = false;
+            } else if (currentPassInput && newPassInput.value === currentPassInput.value) {
+                errors.newPassword = 'New password must be different from current password';
+                isValid = false;
+            }
+            
+            if (!confirmPassInput || !confirmPassInput.value) {
+                errors.confirmPassword = 'Please confirm your password';
+                isValid = false;
+            } else if (newPassInput && confirmPassInput && confirmPassInput.value !== newPassInput.value) {
+                errors.confirmPassword = 'Passwords do not match';
+                isValid = false;
+            }
+            
+            // Show all errors
+            Object.entries(errors).forEach(([field, message]) => {
+                const inputId = `${formId}-${field}`;
+                UIUtils.showError(inputId, message);
+            });
+            
+            if (!isValid) return;
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<span class="spinner"></span> Updating...';
+            submitBtn.classList.add('btn-loading');
+
+            try {
+                const res = await fetch('/api/auth/update-password', {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    submitBtn.innerHTML = '<span class="checkmark"></span> Updated!';
+                    UIUtils.showToast('success', 'Password updated successfully');
+                    
+                    setTimeout(() => {
+                        // Determine which modal to close based on role
+                        let modalToClose = '';
+                        if (role === 'ADMIN') modalToClose = 'adminUpdateModal';
+                        else if (role === 'INVIGILATOR') modalToClose = 'invUpdateModal';
+                        else if (role === 'STUDENT') modalToClose = 'studentUpdateModal';
+                        
+                        UIUtils.closeModal(modalToClose);
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.classList.remove('btn-loading');
+                        
+                        // Clear the corresponding login form
+                        UIUtils.clearLoginForm(role);
+                        
+                        // Open corresponding login modal
+                        if (role === 'ADMIN') {
+                            UIUtils.openModal('adminModal');
+                        } else if (role === 'INVIGILATOR') {
+                            UIUtils.openModal('invModal');
+                        } else if (role === 'STUDENT') {
+                            UIUtils.openModal('studentModal');
+                        }
+                    }, 1500);
+                } else {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.classList.remove('btn-loading');
+                    UIUtils.showToast('error', data.message || 'Password update failed');
+                    
+                    // Show server errors if any
+                    if (data.errors) {
+                        Object.entries(data.errors).forEach(([field, message]) => {
+                            const inputId = `${formId}-${field}`;
+                            UIUtils.showError(inputId, message);
+                        });
+                    }
+                }
+            } catch {
+                submitBtn.innerHTML = originalText;
+                submitBtn.classList.remove('btn-loading');
+                UIUtils.showToast('error', 'Server unavailable. Please try again later.');
+            }
+        });
+    }
+
+    static handleAdminRegistration() {
+        const form = document.getElementById('adminRegisterForm');
+        if (!form) return;
+
+        const inputs = {
+            name: document.getElementById('reg-name'),
+            email: document.getElementById('reg-email'),
+            password: document.getElementById('reg-password'),
+            confirm: document.getElementById('reg-confirm')
+        };
+
+        // Validation for each field
+        if (inputs.name) {
+            inputs.name.addEventListener('blur', () => {
+                if (!inputs.name.value.trim()) {
+                    UIUtils.showError('reg-name', 'Name is required');
+                } else {
+                    UIUtils.clearError('reg-name');
+                }
+            });
+        }
+
+        if (inputs.email) {
+            inputs.email.addEventListener('blur', async () => {
+                if (!inputs.email.value.trim()) {
+                    UIUtils.showError('reg-email', 'Email is required');
+                    return;
+                }
+                if (!FormValidator.validateEmail(inputs.email.value)) {
+                    UIUtils.showError('reg-email', 'Invalid email format');
+                    return;
+                }
+                
+                const exists = await FormValidator.checkEmailExists(inputs.email.value, 'ADMIN');
+                if (exists === true) {
+                    UIUtils.showError('reg-email', 'Email already exists');
+                } else {
+                    UIUtils.clearError('reg-email');
+                }
+            });
+        }
+
+        if (inputs.password) {
+            inputs.password.addEventListener('blur', () => {
+                if (!inputs.password.value) {
+                    UIUtils.showError('reg-password', 'Password is required');
+                } else if (!FormValidator.validatePassword(inputs.password.value)) {
+                    UIUtils.showError('reg-password', 'Minimum 6 characters required');
+                } else {
+                    UIUtils.clearError('reg-password');
+                }
+            });
+        }
+
+        if (inputs.confirm) {
+            inputs.confirm.addEventListener('blur', () => {
+                if (!inputs.confirm.value) {
+                    UIUtils.showError('reg-confirm', 'Confirm your password');
+                } else if (inputs.confirm.value !== inputs.password?.value) {
+                    UIUtils.showError('reg-confirm', 'Passwords do not match');
+                } else {
+                    UIUtils.clearError('reg-confirm');
+                }
+            });
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: inputs.name?.value,
+                email: inputs.email?.value,
+                password: inputs.password?.value,
+                confirmPassword: inputs.confirm?.value
+            };
+            
+            const errors = FormValidator.validateRegistration(formData);
+            
+            if (Object.keys(errors).length > 0) {
+                Object.entries(errors).forEach(([field, message]) => {
+                    UIUtils.showError(`reg-${field === 'confirmPassword' ? 'confirm' : field}`, message);
+                });
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const message = await res.text();
+                
+                if (res.ok) {
+                    UIUtils.showToast('success', message);
+                    UIUtils.closeModal('adminRegisterModal');
+                    UIUtils.clearLoginForm('ADMIN');
+                    UIUtils.openModal('adminModal');
+                } else {
+                    UIUtils.showToast('error', message);
+                }
+            } catch {
+                UIUtils.showToast('error', 'Server unavailable');
+            }
+        });
+    }
+
+    static handleAdminKeyVerification() {
+        const verifyAdminKey = async () => {
+            const keyInput = document.getElementById('admin-secret-key');
+            const key = keyInput?.value.trim();
+            
+            if (!key) {
+                UIUtils.showError('admin-secret-key', 'Admin access key is required');
+                return;
+            }
+
+            UIUtils.clearError('admin-secret-key');
+
+            try {
+                const res = await fetch('/api/admin-access/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.allowed) {
+                    UIUtils.showToast('success', 'Access granted');
+                    UIUtils.closeModal('adminKeyModal');
+                    UIUtils.openModal('adminRegisterModal');
+                } else {
+                    UIUtils.showToast('error', 'Invalid Admin Access Key');
+                }
+            } catch {
+                UIUtils.showToast('error', 'Server error. Try again later.');
+            }
+        };
+
+        const keyInput = document.getElementById('admin-secret-key');
+        if (keyInput) {
+            keyInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') verifyAdminKey();
+            });
+        }
+
+        const verifyBtn = document.querySelector('#adminKeyModal button');
+        if (verifyBtn) {
+            verifyBtn.addEventListener('click', verifyAdminKey);
+        }
+    }
+}
+
+// ============== MODAL MANAGEMENT ==============
+class ModalManager {
+    static initModalButtons() {
+        // Setup open modal buttons
+        document.querySelectorAll('[data-modal-open]').forEach(button => {
+            button.addEventListener('click', () => {
+                const modalId = button.getAttribute('data-modal-open');
+                UIUtils.openModal(modalId);
+            });
+        });
+
+        // Setup close buttons with special handling for update modals
+        document.querySelectorAll('.close-mark').forEach(button => {
+            button.addEventListener('click', () => {
+                const modal = button.closest('.modal');
+                const modalId = modal.id;
+                
+                // Clear the modal before closing
+                modal.querySelectorAll('input').forEach(input => {
+                    input.value = '';
+                    input.classList.remove('input-error');
+                });
+                modal.querySelectorAll('.error-message').forEach(err => {
+                    err.style.display = 'none';
+                });
+                
+                // Close the modal
+                modal.style.display = 'none';
+                
+                // If closing an update modal, open corresponding login modal with cleared form
+                if (modalId === 'studentUpdateModal') {
+                    UIUtils.clearLoginForm('STUDENT');
+                    UIUtils.openModal('studentModal');
+                } else if (modalId === 'adminUpdateModal') {
+                    UIUtils.clearLoginForm('ADMIN');
+                    UIUtils.openModal('adminModal');
+                } else if (modalId === 'invUpdateModal') {
+                    UIUtils.clearLoginForm('INVIGILATOR');
+                    UIUtils.openModal('invModal');
+                }
+            });
+        });
+    }
+
+    static initHeroSlides() {
+        const slides = document.querySelectorAll('.hero-slide');
+        if (!slides.length) return;
+
+        let currentSlide = 0;
+        setInterval(() => {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }, 4000);
+    }
+}
+
+// ============== INITIALIZATION ==============
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize all modals
+    ModalManager.initModalButtons();
+    
+    // Initialize hero slides
+    const heroSlider = document.getElementById('heroSlider');
+    if (heroSlider) {
+        SLIDE_IMAGES.forEach((img, index) => {
+            const slide = document.createElement('div');
+            slide.className = `hero-slide${index === 0 ? ' active' : ''}`;
+            slide.style.backgroundImage = `url('${img}')`;
+            heroSlider.appendChild(slide);
+        });
+        ModalManager.initHeroSlides();
+    }
+    
+    // Initialize form handlers
+    FormHandler.handleLogin('studentLoginForm', 'STUDENT');
+    FormHandler.handleLogin('adminLoginForm', 'ADMIN');
+    FormHandler.handleLogin('invLoginForm', 'INVIGILATOR');
+    FormHandler.handlePasswordUpdate('studentUpdateForm', 'STUDENT');
+    FormHandler.handlePasswordUpdate('adminUpdateForm', 'ADMIN');
+    FormHandler.handlePasswordUpdate('invUpdateForm', 'INVIGILATOR');
+    FormHandler.handleAdminRegistration();
+    FormHandler.handleAdminKeyVerification();
+    
+    // Apply password toggles
+    UIUtils.applyPasswordToggles();
+});
+</script>
+</head>
+
+<body>
+	<div id="toast" class="toast"></div>
+
+	<!-- Navbar -->
+	<div class="navbar">
+		<div class="logo"><i class="fa-solid fa-school"></i> Exam Seating Arrangement System</div>
+		<div>
+			<a data-modal-open="studentModal">🎓 Student Login</a>
+			<a data-modal-open="invModal">🧑‍🏫 Invigilator Login</a>
+			<a data-modal-open="adminModal">👨‍💼 Admin Login</a>
+			<a data-modal-open="adminKeyModal">🔐 Admin Register</a>
+		</div>
+	</div>
+
+	<!-- Hero -->
+	<div class="hero">
+		<div class="hero-slider" id="heroSlider">
+			<!-- Slides populated by JavaScript -->
+		</div>
+		<div class="hero-overlay"></div>
+		<div class="hero-content">
+			<h1>Exam Seating<br>Arrangement System</h1>
+			<p>Automatically assign students to seats and invigilators.</p>
+			<button data-modal-open="adminModal">Get Started</button>
+		</div>
+	</div>
+
+	<!-- STUDENT LOGIN -->
+	<div class="modal" id="studentModal">
+		<div class="login-card">
+			<span class="close-mark">✖</span>
+			<h2>Student Login</h2>
+			<form id="studentLoginForm" method="post" action="/api/auth/login">
+				<input id="student-email" name="email" placeholder="Email">
+				<div id="student-email-error" class="error-message"></div>
+				<input type="password" id="student-password" name="password" placeholder="Password">
+				<div id="student-password-error" class="error-message"></div>
+				<button>Login</button>
+			</form>
+			<div class="link" data-modal-open="studentUpdateModal">Forgot / Update Password</div>
+		</div>
+	</div>
+
+	<!-- ADMIN LOGIN -->
+	<div class="modal" id="adminModal">
+		<div class="login-card">
+			<span class="close-mark">✖</span>
+			<h2>Admin Login</h2>
+			<form id="adminLoginForm" method="post" action="/api/auth/login">
+				<input id="admin-email" name="email" placeholder="Email">
+				<div id="admin-email-error" class="error-message"></div>
+				<input type="password" id="admin-password" name="password" placeholder="Password">
+				<div id="admin-password-error" class="error-message"></div>
+				<button>Login</button>
+			</form>
+			<div class="link" data-modal-open="adminUpdateModal">Forgot / Update Password</div>
+		</div>
+	</div>
+
+	<!-- INVIGILATOR LOGIN -->
+	<div class="modal" id="invModal">
+		<div class="login-card">
+			<span class="close-mark">✖</span>
+			<h2>Invigilator Login</h2>
+			<form id="invLoginForm" method="post" action="/api/auth/login">
+				<input id="inv-email" name="email" placeholder="Email">
+				<div id="inv-email-error" class="error-message"></div>
+				<input type="password" id="inv-password" name="password" placeholder="Password">
+				<div id="inv-password-error" class="error-message"></div>
+				<button>Login</button>
+			</form>
+			<div class="link" data-modal-open="invUpdateModal">Forgot / Update Password</div>
+		</div>
+	</div>
+
+	<!-- STUDENT UPDATE -->
+	<div class="modal" id="studentUpdateModal">
+		<div class="login-card">
+			<span class="close-mark">✖</span>
+			<h2>Student Update Password</h2>
+			<form id="studentUpdateForm">
+				<input type="hidden" name="role" value="STUDENT">
+				<input name="email" placeholder="Email">
+				<input type="password" name="currentPassword" placeholder="Current Password">
+				<input type="password" name="newPassword" placeholder="New Password">
+				<input type="password" name="confirmPassword" placeholder="Confirm Password">
+				<button type="submit">Update Password</button>
+			</form>
+		</div>
+	</div>
+
+	<!-- ADMIN UPDATE -->
+	<div class="modal" id="adminUpdateModal">
+		<div class="login-card">
+			<span class="close-mark">✖</span>
+			<h2>Admin Update Password</h2>
+			<form id="adminUpdateForm">
+				<input type="hidden" name="role" value="ADMIN">
+				<input name="email" placeholder="Email">
+				<input type="password" name="currentPassword" placeholder="Current Password">
+				<input type="password" name="newPassword" placeholder="New Password">
+				<input type="password" name="confirmPassword" placeholder="Confirm Password">
+				<button type="submit">Update Password</button>
+			</form>
+		</div>
+	</div>
+
+	<!-- INVIGILATOR UPDATE -->
+	<div class="modal" id="invUpdateModal">
+		<div class="login-card">
+			<span class="close-mark">✖</span>
+			<h2>Invigilator Update Password</h2>
+			<form id="invUpdateForm">
+				<input type="hidden" name="role" value="INVIGILATOR">
+				<input name="email" placeholder="Email">
+				<input type="password" name="currentPassword" placeholder="Current Password">
+				<input type="password" name="newPassword" placeholder="New Password">
+				<input type="password" name="confirmPassword" placeholder="Confirm Password">
+				<button type="submit">Update Password</button>
+			</form>
+		</div>
+	</div>
+
+	<!-- ADMIN KEY -->
+	<div class="modal" id="adminKeyModal">
+		<div class="login-card">
+			<span class="close-mark">✖</span>
+			<h2>Admin Access</h2>
+			<input id="admin-secret-key" type="password" placeholder="Enter Admin Secret Key">
+			<div id="admin-secret-key-error" class="error-message"></div>
+			<button>Verify</button>
+		</div>
+	</div>
+
+	<!-- ADMIN REGISTER -->
+	<div class="modal" id="adminRegisterModal">
+		<div class="login-card">
+			<span class="close-mark">✖</span>
+			<h2>Admin Registration</h2>
+			<form id="adminRegisterForm">
+				<input id="reg-name" placeholder="Name">
+				<div id="reg-name-error" class="error-message"></div>
+				<input id="reg-email" placeholder="Email">
+				<div id="reg-email-error" class="error-message"></div>
+				<input type="password" id="reg-password" placeholder="Password">
+				<div id="reg-password-error" class="error-message"></div>
+				<input type="password" id="reg-confirm" placeholder="Confirm Password">
+				<div id="reg-confirm-error" class="error-message"></div>
+				<button>Register Admin</button>
+			</form>
+		</div>
+	</div>
+</body>
+<div class="footer">@2026 Exam Seating Arrangement System | All Rights Reserved</div>
+</html>

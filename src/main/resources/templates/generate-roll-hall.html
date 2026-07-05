@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Roll & Hall Numbers</title>
+    
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255, 255, 255, .2);
+        }
+
+        .sidebar a.active {
+            background: rgba(255, 255, 255, .15);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* Header */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h2 {
+            color: #2a5298;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-info {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        /* Card */
+        .card {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .card-header h3 {
+            color: #2a5298;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        /* Alert */
+        .alert {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            color: #856404;
+            font-weight: 500;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background: #2a5298;
+            color: #fff;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2a5298;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2a5298;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h2>Admin Panel</h2>
+        <a href="/admin-dashboard">🏠 Home</a>
+        <a href="/students">👨‍🎓 Students</a>
+        <a href="/exams">📝 Exams</a>
+        <a href="/rooms">🏫 Rooms</a>
+        <a href="/invigilators">👨‍🏫 Invigilators</a>
+        <a href="/generate-seating">🔄 Generate Seating</a>
+        <a href="/view-seating">👀 View Seating</a>
+        <a href="/generate-roll-hall" class="active">🎫 Generate Roll & Hall</a>
+        <a href="/charts">📊 Charts</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h2>Generate Roll & Hall Numbers</h2>
+            <button class="btn btn-danger" onclick="logout()">Logout</button>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Stats Card -->
+        <div class="card">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Students</div>
+                    <div class="stat-value" id="totalStudents">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Without Roll Numbers</div>
+                    <div class="stat-value" id="withoutRoll">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Without Hall Tickets</div>
+                    <div class="stat-value" id="withoutHall">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ready for Generation</div>
+                    <div class="stat-value" id="readyCount">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generation Options Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Generate Options</h3>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <label class="form-label">Academic Year *</label>
+                    <select id="academicYear" class="form-control">
+                        <option value="">Select Academic Year</option>
+                        <option value="2025-2026">2025-2026</option>
+                        <option value="2024-2025">2024-2025</option>
+                        <option value="2023-2024">2023-2024</option>
+                    </select>
+                </div>
+                
+                <div class="form-col">
+                    <label class="form-label">Department *</label>
+                    <select id="department" class="form-control">
+                        <option value="">Select Department</option>
+                        <option value="CSE">Computer Science</option>
+                        <option value="ECE">Electronics</option>
+                        <option value="EEE">Electrical</option>
+                        <option value="MECH">Mechanical</option>
+                        <option value="CIVIL">Civil</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <label class="form-label">Year of Study *</label>
+                    <select id="studyYear" class="form-control">
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+                
+                <div class="form-col">
+                    <label class="form-label">Section (Optional)</label>
+                    <select id="section" class="form-control">
+                        <option value="">All Sections</option>
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">What to Generate?</label>
+                <div style="display: flex; gap: 20px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="generateRoll" checked> Roll Numbers
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="generateHall" checked> Hall Ticket Numbers
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="overrideExisting"> Override Existing Numbers
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Numbering Pattern</label>
+                <select id="numberingPattern" class="form-control">
+                    <option value="sequential">Sequential (001, 002, 003...)</option>
+                    <option value="departmental">Department-wise (CSE001, ECE001...)</option>
+                    <option value="yearwise">Year-wise (2025CSE001, 2025ECE001...)</option>
+                </select>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <label class="form-label">Starting Number</label>
+                    <input type="number" id="startNumber" class="form-control" value="1" min="1">
+                </div>
+                
+                <div class="form-col">
+                    <label class="form-label">Prefix (Optional)</label>
+                    <input type="text" id="prefix" class="form-control" placeholder="e.g., EXAM">
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-primary" onclick="previewGeneration()">
+                    👁 Preview Generation
+                </button>
+                <button class="btn btn-warning" onclick="clearSelection()">
+                    🗑 Clear Selection
+                </button>
+            </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="card" id="previewCard" style="display: none;">
+            <div class="card-header">
+                <h3>Preview Generation</h3>
+                <button class="btn btn-success" onclick="confirmGeneration()">
+                    ✅ Confirm & Generate
+                </button>
+            </div>
+            
+            <div id="previewStats" class="stats-grid"></div>
+            
+            <div class="table-container">
+                <table id="previewTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Student Name</th>
+                            <th>Current Roll No</th>
+                            <th>New Roll No</th>
+                            <th>Current Hall Ticket</th>
+                            <th>New Hall Ticket</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewTableBody"></tbody>
+                </table>
+            </div>
+            
+            <div class="spinner" id="previewSpinner"></div>
+        </div>
+
+        <!-- Alert -->
+        <div id="alertBox" class="alert">
+            ⚠ Please select at least one generation option (Roll Numbers or Hall Ticket Numbers)
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 Exam Seating Arrangement System
+    </footer>
+
+    <script>
+        // Configuration
+        const Config = {
+            API_BASE: "/api/students",
+            TOAST_DURATION: 3500
+        };
+
+        // Toast Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, Config.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+        }
+
+        // Load initial stats
+        async function loadInitialStats() {
+            try {
+                const response = await fetch(`${Config.API_BASE}/roll-hall-stats`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStats(data);
+                }
+            } catch (error) {
+                console.error("Failed to load stats:", error);
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById('totalStudents').textContent = data.totalStudents || 0;
+            document.getElementById('withoutRoll').textContent = data.withoutRollNumbers || 0;
+            document.getElementById('withoutHall').textContent = data.withoutHallTickets || 0;
+            document.getElementById('readyCount').textContent = data.readyForGeneration || 0;
+        }
+
+        // Preview Generation
+        async function previewGeneration() {
+            const formData = getFormData();
+            
+            if (!validateForm(formData)) {
+                return;
+            }
+            
+            showPreviewSpinner(true);
+            
+            try {
+                const response = await fetch(`${Config.API_BASE}/preview-roll-hall`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showPreview(data);
+                } else {
+                    throw new Error('Failed to preview generation');
+                }
+            } catch (error) {
+                ToastManager.error("Failed to preview generation: " + error.message);
+            } finally {
+                showPreviewSpinner(false);
+            }
+        }
+
+        function getFormData() {
+            return {
+                academicYear: document.getElementById('academicYear').value,
+                department: document.getElementById('department').value,
+                year: document.getElementById('studyYear').value,
+                section: document.getElementById('section').value,
+                generateRoll: document.getElementById('generateRoll').checked,
+                generateHall: document.getElementById('generateHall').checked,
+                overrideExisting: document.getElementById('overrideExisting').checked,
+                numberingPattern: document.getElementById('numberingPattern').value,
+                startNumber: parseInt(document.getElementById('startNumber').value),
+                prefix: document.getElementById('prefix').value.trim()
+            };
+        }
+
+        function validateForm(formData) {
+            // Show alert if no generation option selected
+            if (!formData.generateRoll && !formData.generateHall) {
+                document.getElementById('alertBox').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('alertBox').classList.remove('show');
+                }, 3000);
+                return false;
+            }
+            
+            // Validate required fields
+            if (!formData.academicYear || !formData.department || !formData.year) {
+                ToastManager.error("Please fill all required fields (marked with *)");
+                return false;
+            }
+            
+            return true;
+        }
+
+        function showPreview(data) {
+            const previewCard = document.getElementById('previewCard');
+            previewCard.style.display = 'block';
+            
+            // Update preview stats
+            const previewStats = document.getElementById('previewStats');
+            previewStats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Selected Students</div>
+                    <div class="stat-value">${data.selectedCount || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Roll Numbers to Generate</div>
+                    <div class="stat-value">${data.rollNumbersToGenerate || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Hall Tickets to Generate</div>
+                    <div class="stat-value">${data.hallTicketsToGenerate || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Will Be Updated</div>
+                    <div class="stat-value">${data.willBeUpdated || 0}</div>
+                </div>
+            `;
+            
+            // Update preview table
+            const tableBody = document.getElementById('previewTableBody');
+            tableBody.innerHTML = '';
+            
+            if (data.preview && data.preview.length > 0) {
+                data.preview.forEach((student, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${student.name}</td>
+                        <td>${student.currentRollNo || '-'}</td>
+                        <td><strong>${student.newRollNo || '-'}</strong></td>
+                        <td>${student.currentHallTicket || '-'}</td>
+                        <td><strong>${student.newHallTicket || '-'}</strong></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px; color: #6b7280;">
+                            No students found for the selected criteria
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            // Scroll to preview
+            previewCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showPreviewSpinner(show) {
+            document.getElementById('previewSpinner').style.display = show ? 'block' : 'none';
+        }
+
+        // Confirm Generation
+        async function confirmGeneration() {
+            if (!confirm("Are you sure you want to generate these numbers? This action cannot be undone.")) {
+                return;
+            }
+            
+            const formData = getFormData();
+            showPreviewSpinner(true);
+            
+            try {
+                const response = await fetch(`${Config.API_BASE}/generate-roll-hall`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    ToastManager.success(`Successfully generated ${result.generatedCount} numbers!`);
+                    
+                    // Reload stats
+                    loadInitialStats();
+                    
+                    // Close preview after delay
+                    setTimeout(() => {
+                        document.getElementById('previewCard').style.display = 'none';
+                        clearSelection();
+                    }, 2000);
+                } else {
+                    throw new Error('Failed to generate numbers');
+                }
+            } catch (error) {
+                ToastManager.error("Failed to generate numbers: " + error.message);
+            } finally {
+                showPreviewSpinner(false);
+            }
+        }
+
+        // Clear Selection
+        function clearSelection() {
+            document.getElementById('academicYear').value = '';
+            document.getElementById('department').value = '';
+            document.getElementById('studyYear').value = '';
+            document.getElementById('section').value = '';
+            document.getElementById('generateRoll').checked = true;
+            document.getElementById('generateHall').checked = true;
+            document.getElementById('overrideExisting').checked = false;
+            document.getElementById('numberingPattern').value = 'sequential';
+            document.getElementById('startNumber').value = '1';
+            document.getElementById('prefix').value = '';
+            document.getElementById('previewCard').style.display = 'none';
+        }
+
+        // Logout
+        function logout() {
+            if (confirm("Are you sure you want to logout?")) {
+                document.getElementById('logoutForm').submit();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInitialStats();
+            
+            // Auto-hide alert after 3 seconds
+            setTimeout(() => {
+                document.getElementById('alertBox').classList.remove('show');
+            }, 3000);
+        });
+
+        // Make functions globally accessible
+        window.previewGeneration = previewGeneration;
+        window.confirmGeneration = confirmGeneration;
+        window.clearSelection = clearSelection;
+        window.logout = logout;
+    </script>
+</body>
+</html>

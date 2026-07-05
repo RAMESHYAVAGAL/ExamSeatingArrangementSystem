@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invigilator Profile</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <style>
+        /* ===== Global ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== Toast Notification ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #0f4c75, #3282b8);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 20px 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+        }
+
+        .header h3 {
+            color: #0f4c75;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== Profile Container ===== */
+        .profile-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+            overflow: hidden;
+        }
+
+        .profile-card {
+            width: 380px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-bottom: 60px; /* Space for footer */
+        }
+
+        /* ===== Profile Header ===== */
+        .profile-header {
+            background: linear-gradient(135deg, #0f4c75, #3282b8);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .profile-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: white;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #0f4c75;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .profile-role {
+            font-size: 13px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        /* ===== Profile Info Grid ===== */
+        .profile-info {
+            padding: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+        }
+
+        .info-label {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            color: #0f4c75;
+            font-size: 13px;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Logout Modal Styles ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 90%;
+            width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-logout-action {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout-action:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .profile-card {
+                width: 350px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-header {
+                padding: 18px;
+            }
+            
+            .profile-info {
+                padding: 18px;
+            }
+            
+            .profile-card {
+                margin-bottom: 50px;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                overflow: auto;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+                height: auto;
+                min-height: 100vh;
+            }
+            .footer {
+                left: 0;
+                position: relative;
+                margin-top: 20px;
+            }
+            .header {
+                margin: 15px;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 380px;
+            }
+            .profile-container {
+                padding: 15px;
+                align-items: flex-start;
+                min-height: auto;
+            }
+            .profile-card {
+                width: 100%;
+                max-width: 320px;
+                margin-bottom: 20px;
+            }
+            .profile-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            .profile-name {
+                font-size: 16px;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Invigilator Panel</h2>
+        <a href="/invigilator-dashboard">🏠 Dashboard</a>
+        <a href="/assigned-exams">📝 Assigned Exams</a>
+        <a href="/invigilator-profile" class="active">👤 My Profile</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Header -->
+        <div class="header">
+            <h3>Invigilator Profile</h3>
+            <button type="button" class="btn-logout" onclick="ProfileManager.openLogoutConfirm()">
+                🚪 Logout
+            </button>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="profile-container">
+            <div class="profile-card">
+                <!-- Profile Header with Avatar -->
+                <div class="profile-header">
+                    <div class="profile-avatar" id="avatar">I</div>
+                    <h2 class="profile-name" id="name">Loading...</h2>
+                    <div class="profile-role">Invigilator</div>
+                </div>
+
+                <!-- Profile Information Grid -->
+                <div class="profile-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Employee ID</span>
+                            <span class="info-value" id="employeeId">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Department</span>
+                            <span class="info-value" id="department">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Full Name</span>
+                            <span class="info-value" id="fullName">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Designation</span>
+                            <span class="info-value">Invigilator</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value" id="email">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Phone</span>
+                            <span class="info-value" id="phone">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal - Enhanced -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn-cancel" onclick="ProfileManager.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn-logout-action" onclick="ProfileManager.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        © 2026 Exam Seating Arrangement System
+    </div>
+
+    <script>
+        // Configuration
+        const Config = {
+            PROFILE_API: "/api/invigilator/profile",
+            TOAST_DURATION: 3500
+        };
+
+        // Toast Notification Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, Config.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+        }
+
+        // Modal Manager
+        class ModalManager {
+            static open(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                    
+                    modal.addEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static close(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                    
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static handleBackdropClick(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.stopPropagation();
+                }
+            }
+        }
+
+        // Profile Manager
+        class ProfileManager {
+            static profileData = null;
+            
+            static async init() {
+                await this.loadProfile();
+                this.setupEventListeners();
+            }
+            
+            static async loadProfile() {
+                try {
+                    const response = await fetch(Config.PROFILE_API);
+                    
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            window.location.href = "/";
+                            return;
+                        }
+                        throw new Error(`HTTP ${response.status}: Failed to load profile`);
+                    }
+                    
+                    const data = await response.json();
+                    this.profileData = data;
+                    
+                    // Update profile information
+                    this.updateProfileUI(data);
+                    
+                } catch (error) {
+                    console.error("Failed to load profile:", error);
+                    ToastManager.error("Failed to load profile information. Please refresh the page.");
+                }
+            }
+            
+            static updateProfileUI(data) {
+                // Update avatar with first letter of name
+                if (data.name) {
+                    const firstLetter = data.name.charAt(0).toUpperCase();
+                    document.getElementById("avatar").textContent = firstLetter;
+                    document.getElementById("name").textContent = data.name;
+                    document.getElementById("fullName").textContent = data.name;
+                }
+                
+                // Update other fields
+                document.getElementById("employeeId").textContent = 
+                    data.employeeId || "N/A";
+                document.getElementById("department").textContent = 
+                    data.department || "Not specified";
+                document.getElementById("email").textContent = 
+                    data.email || "Not specified";
+                document.getElementById("phone").textContent = 
+                    data.phone || "Not specified";
+            }
+            
+            static openLogoutConfirm() {
+                ModalManager.open("logoutConfirmModal");
+            }
+            
+            static closeLogoutConfirm() {
+                ModalManager.close("logoutConfirmModal");
+            }
+            
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+            
+            static setupEventListeners() {
+                // Handle page visibility change
+                document.addEventListener("visibilitychange", () => {
+                    if (!document.hidden) {
+                        this.loadProfile();
+                    }
+                });
+                
+                // Handle window focus
+                window.addEventListener("focus", () => {
+                    this.loadProfile();
+                });
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (document.getElementById("logoutConfirmModal").style.display === 'flex') {
+                            this.closeLogoutConfirm();
+                        }
+                    }
+                });
+            }
+            
+            static async refreshProfile() {
+                ToastManager.info("Refreshing profile information...");
+                await this.loadProfile();
+                ToastManager.success("Profile refreshed successfully!");
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            ProfileManager.init();
+        });
+
+        // Make manager accessible globally
+        window.ProfileManager = ProfileManager;
+        window.ToastManager = ToastManager;
+        window.ModalManager = ModalManager;
+    </script>
+</body>
+</html>

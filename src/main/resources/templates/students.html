@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Management</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        button, select {
+            cursor: pointer;
+        }
+
+        /* ===== Common Components ===== */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            width: 550px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 7px 14px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-info {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, .2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h3 {
+            color: #2a5298;
+        }
+
+        /* ===== Table ===== */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th {
+            background: #2a5298;
+            color: #fff;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* ===== Form Elements ===== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23374151' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 35px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 3px;
+            display: none;
+        }
+
+        /* ===== Two Column Form Layout ===== */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        /* ===== Search & Filter ===== */
+        .search-box {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .search-input {
+            padding: 10px 10px 10px 35px;
+            width: 250px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 10px center;
+            background-size: 16px;
+        }
+
+        /* ===== Pagination ===== */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pagination-info {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-size-select {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Action Buttons ===== */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 4px;
+        }
+
+        /* ===== Card Header ===== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-header h2 {
+            color: #2a5298;
+            font-size: 1.5rem;
+        }
+
+        /* ===== Gender Radio Buttons ===== */
+        .gender-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+        }
+
+        .gender-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .gender-option input[type="radio"] {
+            margin: 0;
+            width: 16px;
+            height: 16px;
+        }
+
+        .gender-option label {
+            font-weight: normal;
+            color: #374151;
+            cursor: pointer;
+        }
+
+        /* ===== Number Input Spinner ===== */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* ===== Modal Backdrop Fix ===== */
+        .modal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: -1;
+        }
+
+        /* ===== Logout Modal Styles ===== */
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .logout-actions .btn {
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        /* ===== Delete Modal Styles ===== */
+        .delete-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .delete-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 8px;
+        }
+
+        .delete-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .delete-message .highlight {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .delete-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .delete-actions .btn {
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        /* ===== Quick Actions ===== */
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 500px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+            .card-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            .search-box {
+                width: 100%;
+            }
+            .search-input {
+                width: 100%;
+            }
+            .gender-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+            .delete-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .delete-actions .btn {
+                width: 100%;
+            }
+            .quick-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .quick-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation">
+        <h2>Admin Panel</h2>
+        <a href="/admin-dashboard">🏠 Home</a>
+        <a href="/students" class="active">👨‍🎓 Students</a>
+        <a href="/exams">📝 Exams</a>
+        <a href="/rooms">🏫 Rooms</a>
+        <a href="/invigilators">👨‍🏫 Invigilators</a>
+        <a href="/generate-seating">🔄 Generate Seating</a>
+        <a href="/view-seating">👀 View Seating</a>
+        <a href="/charts">📊 Charts</a>
+        <a href="/bulk-upload">📤 Bulk Upload</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h3>Student Management</h3>
+            <button type="button" class="btn btn-danger" onclick="StudentManager.openLogoutConfirm()">
+                🚪 Logout
+            </button>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Quick Actions Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Quick Actions</h2>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-primary" onclick="StudentManager.openAddModal()">
+                    ➕ Add Student
+                </button>
+                <button class="btn btn-success" onclick="window.location.href='/bulk-upload'">
+                    📤 Bulk Upload
+                </button>
+                <!--<button class="btn btn-info" onclick="StudentManager.refreshStudents()">
+                    🔄 Refresh List
+                </button>-->
+            </div>
+        </section>
+
+        <!-- Student Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Students List</h2>
+                <div class="search-box">
+                    <input type="text" 
+                           id="searchInput" 
+                           class="search-input" 
+                           placeholder="Search students..."
+                           onkeyup="StudentManager.searchTable()">
+                </div>
+                <button class="btn btn-primary" onclick="StudentManager.openAddModal()">
+                    ＋ Add Student
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Roll No</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Gender</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Semester</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Showing <span id="startRow">1</span> to <span id="endRow">10</span> of 
+                    <span id="totalRows">0</span> entries
+                </div>
+                <div class="pagination-controls">
+                    <div>
+                        Show 
+                        <select id="pageSize" class="page-size-select" onchange="StudentManager.changePageSize()">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                        </select>
+                        entries
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button id="prevBtn" class="btn btn-secondary" onclick="StudentManager.prevPage()" disabled>
+                            ← Previous
+                        </button>
+                        <span id="pageInfo" style="font-weight: 600; color: #374151;">Page 1</span>
+                        <button id="nextBtn" class="btn btn-secondary" onclick="StudentManager.nextPage()" disabled>
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add/Edit Student Modal -->
+    <div class="modal" id="studentModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <h3 id="modalTitle">Add Student</h3>
+            <form id="studentForm">
+                <input type="hidden" id="studentId">
+                
+                <!-- Row 1: Name & Department -->
+                <div class="form-row">            
+                    <div class="form-col">
+                        <label for="studentName" class="form-label">Student Name *</label>
+                        <input type="text" id="studentName" class="form-control" placeholder="Enter student name" maxlength="100">
+                        <div id="nameErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="department" class="form-label">Department *</label>
+                        <select id="department" class="form-control">
+                            <option value="">Select Department</option>
+                            <option value="CSE">CSE</option>
+                            <option value="ECE">ECE</option>
+                            <option value="EEE">EEE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                            <option value="IT">IT</option>
+                            <option value="MBA">MBA</option>
+                            <option value="MCA">MCA</option>
+                            <option value="CHEM">CHEM</option>
+                            <option value="AERO">AERO</option>
+                            <option value="AGRI">AGRI</option>
+                            <option value="AI_DS">AI &amp; DS</option>
+                            <option value="AI_ML">AI &amp; ML</option>
+                            <option value="AUTO">AUTO</option>
+                            <option value="BIO_TECH">BIO TECH</option>
+                            <option value="CSBS">CSBS</option>
+                        </select>
+                        <div id="deptErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 2: Roll No & Email -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="rollNo" class="form-label">Roll No *</label>
+                        <input type="text" id="rollNo" class="form-control" placeholder="Enter roll number" maxlength="30">
+                        <div id="rollNoErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" id="email" class="form-control" placeholder="Enter email address" maxlength="100">
+                        <div id="emailErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Phone & Gender -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="phone" class="form-label">Phone Number *</label>
+                        <input type="tel" id="phone" class="form-control" placeholder="Enter 10-digit phone number" maxlength="10" minlength="10">
+                        <div id="phoneErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Gender *</label>
+                        <div class="gender-options">
+                            <div class="gender-option">
+                                <input type="radio" id="genderMale" name="gender" value="MALE">
+                                <label for="genderMale">Male</label>
+                            </div>
+                            <div class="gender-option">
+                                <input type="radio" id="genderFemale" name="gender" value="FEMALE">
+                                <label for="genderFemale">Female</label>
+                            </div>
+                            <div class="gender-option">
+                                <input type="radio" id="genderOther" name="gender" value="OTHER">
+                                <label for="genderOther">Other</label>
+                            </div>
+                        </div>
+                        <div id="genderErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 4: Year & Semester -->
+                <div class="form-row">                   
+                    <div class="form-col">
+                        <label for="year" class="form-label">Year *</label>
+                        <select id="year" class="form-control">
+                            <option value="">Select Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                            <option value="5">5th Year</option>
+                        </select>
+                        <div id="yearErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="currentSemester" class="form-label">Current Semester *</label>
+                        <select id="currentSemester" class="form-control">
+                            <option value="">Select Semester</option>
+                        </select>
+                        <div id="semesterErr" class="error-text"></div>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="StudentManager.closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="StudentManager.saveStudent()">Save Student</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal - Enhanced -->
+    <div class="modal" id="deleteConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="delete-icon">🗑️</div>
+            <div class="delete-title">Confirm Delete</div>
+            <div class="delete-message">
+                Are you sure you want to delete this student?<br>
+                This action <span class="highlight">cannot be undone</span> and all associated data will be permanently removed.
+            </div>
+            <div class="delete-actions">
+                <button class="btn btn-cancel" onclick="StudentManager.closeDeleteConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-delete" onclick="StudentManager.confirmDelete()">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal - Enhanced -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn btn-cancel" onclick="StudentManager.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-logout" onclick="StudentManager.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 Exam Seating Arrangement System
+    </footer>
+
+    <script>
+        // Configuration
+        const Config = {
+            API_BASE: "/api/admin/students",
+            TOAST_DURATION: 3500,
+            DEFAULT_ROWS_PER_PAGE: 10,
+            VALIDATION_RULES: {
+                name: /^[A-Za-z\s]+$/,
+                email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                phone: /^[6-9]\d{9}$/,
+                phoneStrict: /^[6-9]\d{9}$/,
+                year: /^[1-5]$/,
+                semester: /^[1-8]$/
+            }
+        };
+
+        // Toast Notification Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, Config.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+        }
+
+        // Modal Manager
+        class ModalManager {
+            static open(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                    modal.addEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static close(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static closeAll() {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                });
+                document.body.style.overflow = "";
+            }
+            
+            static handleBackdropClick(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.stopPropagation();
+                }
+            }
+        }
+
+        // Form Validation Manager
+        class ValidationManager {
+            static clearErrors() {
+                document.querySelectorAll(".error-text").forEach(el => {
+                    el.style.display = "none";
+                    el.textContent = "";
+                });
+                
+                const formFields = document.querySelectorAll('#studentForm .form-control');
+                formFields.forEach(field => {
+                    field.style.borderColor = '#d1d5db';
+                });
+            }
+            
+            static setError(fieldId, errorId, message) {
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = "block";
+                }
+                const fieldEl = document.getElementById(fieldId);
+                if (fieldEl) {
+                    fieldEl.style.borderColor = "#dc2626";
+                    fieldEl.focus();
+                }
+            }
+            
+            static setRadioError(errorId, message) {
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = "block";
+                }
+            }
+            
+            static clearFieldError(fieldId, errorId) {
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) {
+                    errorEl.style.display = "none";
+                }
+                const fieldEl = document.getElementById(fieldId);
+                if (fieldEl) {
+                    fieldEl.style.borderColor = "#d1d5db";
+                }
+            }
+            
+            static clearRadioError(errorId) {
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) {
+                    errorEl.style.display = "none";
+                }
+            }
+            
+            static validateStudent() {
+                this.clearErrors();
+                let isValid = true;
+                
+                const rollNo = document.getElementById("rollNo").value.trim();
+                if (!rollNo) {
+                    this.setError("rollNo", "rollNoErr", "Roll No is required");
+                    isValid = false;
+                }
+                
+                const name = document.getElementById("studentName").value.trim();
+                if (!name) {
+                    this.setError("studentName", "nameErr", "Name is required");
+                    isValid = false;
+                } else if (!Config.VALIDATION_RULES.name.test(name)) {
+                    this.setError("studentName", "nameErr", "Name must contain letters only");
+                    isValid = false;
+                }
+                
+                const email = document.getElementById("email").value.trim();
+                if (!email) {
+                    this.setError("email", "emailErr", "Email is required");
+                    isValid = false;
+                } else if (!Config.VALIDATION_RULES.email.test(email)) {
+                    this.setError("email", "emailErr", "Please enter a valid email address");
+                    isValid = false;
+                }
+                
+                const phone = document.getElementById("phone").value.trim();
+                if (!phone) {
+                    this.setError("phone", "phoneErr", "Phone number is required");
+                    isValid = false;
+                } else if (!Config.VALIDATION_RULES.phoneStrict.test(phone)) {
+                    this.setError("phone", "phoneErr", "Enter a valid 10-digit phone number starting with 6, 7, 8, or 9");
+                    isValid = false;
+                }
+                
+                const gender = document.querySelector('input[name="gender"]:checked');
+                if (!gender) {
+                    this.setRadioError("genderErr", "Please select a gender");
+                    isValid = false;
+                }
+                
+                const department = document.getElementById("department").value;
+                if (!department) {
+                    this.setError("department", "deptErr", "Please select a department");
+                    isValid = false;
+                }
+                
+                const year = document.getElementById("year").value;
+                if (!year) {
+                    this.setError("year", "yearErr", "Please select a year");
+                    isValid = false;
+                }
+                
+                const semester = document.getElementById("currentSemester").value;
+                if (!semester) {
+                    this.setError("currentSemester", "semesterErr", "Please select a semester");
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            static setupRealTimeValidation() {
+                document.getElementById("rollNo").addEventListener("input", () => {
+                    if (document.getElementById("rollNo").value.trim()) {
+                        this.clearFieldError("rollNo", "rollNoErr");
+                    }
+                });
+                
+                document.getElementById("studentName").addEventListener("input", () => {
+                    const value = document.getElementById("studentName").value.trim();
+                    if (value && Config.VALIDATION_RULES.name.test(value)) {
+                        this.clearFieldError("studentName", "nameErr");
+                    }
+                });
+                
+                document.getElementById("email").addEventListener("input", () => {
+                    const value = document.getElementById("email").value.trim();
+                    if (value && Config.VALIDATION_RULES.email.test(value)) {
+                        this.clearFieldError("email", "emailErr");
+                    }
+                });
+                
+                document.getElementById("phone").addEventListener("input", function() {
+                    this.value = this.value.replace(/\D/g, '');
+                    if (this.value.length > 10) {
+                        this.value = this.value.slice(0, 10);
+                    }
+                    const value = this.value.trim();
+                    if (value) {
+                        if (Config.VALIDATION_RULES.phoneStrict.test(value)) {
+                            ValidationManager.clearFieldError("phone", "phoneErr");
+                        }
+                    }
+                });
+                
+                document.getElementById("phone").addEventListener("blur", function() {
+                    const value = this.value.trim();
+                    if (value && !Config.VALIDATION_RULES.phoneStrict.test(value)) {
+                        ValidationManager.setError("phone", "phoneErr", "Enter a valid 10-digit phone number starting with 6, 7, 8, or 9");
+                    } else if (value) {
+                        ValidationManager.clearFieldError("phone", "phoneErr");
+                    }
+                });
+                
+                document.querySelectorAll('input[name="gender"]').forEach(radio => {
+                    radio.addEventListener("change", () => {
+                        if (document.querySelector('input[name="gender"]:checked')) {
+                            this.clearRadioError("genderErr");
+                        }
+                    });
+                });
+                
+                document.getElementById("department").addEventListener("change", () => {
+                    if (document.getElementById("department").value) {
+                        this.clearFieldError("department", "deptErr");
+                    }
+                });
+                
+                document.getElementById("year").addEventListener("change", () => {
+                    const value = document.getElementById("year").value;
+                    if (value) {
+                        this.clearFieldError("year", "yearErr");
+                        StudentManager.populateSemesterOptions(value);
+                    }
+                });
+                
+                document.getElementById("currentSemester").addEventListener("change", () => {
+                    if (document.getElementById("currentSemester").value) {
+                        this.clearFieldError("currentSemester", "semesterErr");
+                    }
+                });
+            }
+        }
+
+        // Student Management Main Class
+        class StudentManager {
+            static students = [];
+            static filteredStudents = [];
+            static currentPage = 1;
+            static rowsPerPage = Config.DEFAULT_ROWS_PER_PAGE;
+            static editId = null;
+            static deleteId = null;
+            
+            static DEPARTMENT_NAMES = {
+                'CSE': 'CSE',
+                'ECE': 'ECE',
+                'EEE': 'EEE',
+                'MECH': 'MECH',
+                'CIVIL': 'CIVIL',
+                'IT': 'IT',
+                'MBA': 'MBA',
+                'MCA': 'MCA',
+                'CHEM': 'CHEM',
+                'AERO': 'AERO',
+                'AGRI': 'AGRI',
+                'AI_DS': 'AI & DS',
+                'AI_ML': 'AI & ML',
+                'AUTO': 'AUTO',
+                'BIO_TECH': 'BIO TECH',
+                'CSBS': 'CSBS'
+            };
+            
+            static async init() {
+                await this.loadStudents();
+                ValidationManager.setupRealTimeValidation();
+                this.setupEventListeners();
+            }
+            
+            static async loadStudents() {
+                try {
+                    const response = await fetch(Config.API_BASE);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.students = await response.json();
+                    this.filteredStudents = [...this.students];
+                    this.currentPage = 1;
+                    this.renderTable();
+                } catch (error) {
+                    console.error("Failed to load students:", error);
+                    ToastManager.error("Failed to load students. Please refresh the page.");
+                }
+            }
+            
+            static renderTable() {
+                const tbody = document.getElementById("studentBody");
+                if (!tbody) return;
+                
+                const start = (this.currentPage - 1) * this.rowsPerPage;
+                const end = start + this.rowsPerPage;
+                const pageStudents = this.filteredStudents.slice(start, end);
+                
+                if (pageStudents.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="10" style="text-align: center; color: #6b7280; padding: 20px;">
+                                No students found. Click "Add Student" to add one.
+                            </td>
+                        </tr>
+                    `;
+                    this.updatePaginationInfo();
+                    return;
+                }
+                
+                tbody.innerHTML = pageStudents.map(student => `
+                    <tr>
+                        <td>${student.id}</td>
+                        <td><strong>${student.rollNo || '-'}</strong></td>
+                        <td>${student.name || '-'}</td>
+                        <td>${student.email || '-'}</td>
+                        <td>${student.phone || '-'}</td>
+                        <td>${student.gender || '-'}</td>
+                        <td>${this.DEPARTMENT_NAMES[student.department] || student.department || '-'}</td>
+                        <td>${student.year || '-'}</td>
+                        <td>${student.currentSemester || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-info action-btn" 
+                                        onclick="StudentManager.editStudent(${student.id})">
+                                    ✏️ Edit
+                                </button>
+                                <button class="btn btn-danger action-btn" 
+                                        onclick="StudentManager.deleteStudent(${student.id})">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join("");
+                
+                this.updatePaginationInfo();
+            }
+            
+            static updatePaginationInfo() {
+                const total = this.filteredStudents.length;
+                const start = (this.currentPage - 1) * this.rowsPerPage + 1;
+                const end = Math.min(this.currentPage * this.rowsPerPage, total);
+                const totalPages = Math.ceil(total / this.rowsPerPage);
+                
+                document.getElementById("startRow").textContent = total === 0 ? 0 : start;
+                document.getElementById("endRow").textContent = end;
+                document.getElementById("totalRows").textContent = total;
+                document.getElementById("pageInfo").textContent = `Page ${this.currentPage} of ${totalPages || 1}`;
+                
+                document.getElementById("prevBtn").disabled = this.currentPage === 1;
+                document.getElementById("nextBtn").disabled = this.currentPage === totalPages || totalPages === 0;
+            }
+            
+            static searchTable() {
+                const query = document.getElementById("searchInput").value.toLowerCase().trim();
+                
+                this.filteredStudents = this.students.filter(student =>
+                    String(student.id).includes(query) ||
+                    (student.rollNo || "").toLowerCase().includes(query) ||
+                    (student.name || "").toLowerCase().includes(query) ||
+                    (student.email || "").toLowerCase().includes(query) ||
+                    (student.phone || "").toLowerCase().includes(query) ||
+                    (student.gender || "").toLowerCase().includes(query) ||
+                    (this.DEPARTMENT_NAMES[student.department] || student.department || "").toLowerCase().includes(query) ||
+                    String(student.year || "").includes(query) ||
+                    String(student.currentSemester || "").includes(query)
+                );
+                
+                this.currentPage = 1;
+                this.renderTable();
+            }
+            
+            static changePageSize() {
+                this.rowsPerPage = parseInt(document.getElementById("pageSize").value);
+                this.currentPage = 1;
+                this.renderTable();
+            }
+            
+            static nextPage() {
+                const totalPages = Math.ceil(this.filteredStudents.length / this.rowsPerPage);
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.renderTable();
+                }
+            }
+            
+            static prevPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.renderTable();
+                }
+            }
+            
+            static getSemestersForYear(year) {
+                const yearMapping = {
+                    '1': ['1', '2'],
+                    '2': ['3', '4'],
+                    '3': ['5', '6'],
+                    '4': ['7', '8'],
+                    '5': ['9', '10']
+                };
+                return yearMapping[year] || [];
+            }
+            
+            static populateSemesterOptions(year, selectedSemester = '') {
+                const semesterSelect = document.getElementById("currentSemester");
+                const semesters = this.getSemestersForYear(year);
+                
+                semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+                
+                semesters.forEach(sem => {
+                    const option = document.createElement("option");
+                    option.value = sem;
+                    option.textContent = `Semester ${sem}`;
+                    if (sem === selectedSemester) {
+                        option.selected = true;
+                    }
+                    semesterSelect.appendChild(option);
+                });
+                
+                semesterSelect.disabled = semesters.length === 0;
+                if (semesters.length === 0) {
+                    const option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "No semesters available";
+                    semesterSelect.appendChild(option);
+                }
+            }
+            
+            static openAddModal() {
+                this.editId = null;
+                document.getElementById("modalTitle").textContent = "Add Student";
+                document.getElementById("studentId").value = "";
+                document.getElementById("studentForm").reset();
+                
+                ValidationManager.clearErrors();
+                
+                const formControls = document.querySelectorAll('#studentForm .form-control');
+                formControls.forEach(control => {
+                    control.style.borderColor = '#d1d5db';
+                });
+                
+                const semesterSelect = document.getElementById("currentSemester");
+                semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+                semesterSelect.disabled = false;
+                
+                ModalManager.open("studentModal");
+            }
+            
+            static async editStudent(id) {
+                try {
+                    const response = await fetch(`${Config.API_BASE}/${id}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const student = await response.json();
+                    this.editId = id;
+                    
+                    document.getElementById("modalTitle").textContent = "Edit Student";
+                    document.getElementById("studentId").value = student.id;
+                    document.getElementById("rollNo").value = student.rollNo || "";
+                    document.getElementById("studentName").value = student.name || "";
+                    document.getElementById("email").value = student.email || "";
+                    document.getElementById("phone").value = student.phone || "";
+                    document.getElementById("department").value = student.department || "";
+                    document.getElementById("year").value = student.year || "";
+                    
+                    this.populateSemesterOptions(student.year || '', student.currentSemester || '');
+                    
+                    if (student.gender) {
+                        document.querySelectorAll('input[name="gender"]').forEach(radio => {
+                            radio.checked = radio.value === student.gender;
+                        });
+                    }
+                    
+                    ValidationManager.clearErrors();
+                    ModalManager.open("studentModal");
+                } catch (error) {
+                    console.error("Failed to load student:", error);
+                    ToastManager.error("Failed to load student details.");
+                }
+            }
+            
+            static async saveStudent() {
+                if (!ValidationManager.validateStudent()) {
+                    ToastManager.warning("Please fix the validation errors.");
+                    return;
+                }
+                
+                const student = {
+                    rollNo: document.getElementById("rollNo").value.trim(),
+                    name: document.getElementById("studentName").value.trim(),
+                    email: document.getElementById("email").value.trim(),
+                    phone: document.getElementById("phone").value.trim(),
+                    gender: document.querySelector('input[name="gender"]:checked')?.value || "",
+                    department: document.getElementById("department").value,
+                    year: document.getElementById("year").value,
+                    currentSemester: document.getElementById("currentSemester").value
+                };
+                
+                if (this.editId) {
+                    student.id = this.editId;
+                }
+                
+                try {
+                    const url = this.editId ? `${Config.API_BASE}/${this.editId}` : Config.API_BASE;
+                    const method = this.editId ? "PUT" : "POST";
+                    
+                    const response = await fetch(url, {
+                        method,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(student)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    this.closeModal();
+                    await this.loadStudents();
+                    
+                    ToastManager.success(
+                        this.editId 
+                            ? "Student updated successfully!" 
+                            : "Student added successfully!"
+                    );
+                } catch (error) {
+                    console.error("Failed to save student:", error);
+                    ToastManager.error(error.message || "Failed to save student. Please try again.");
+                }
+            }
+            
+            static deleteStudent(id) {
+                this.deleteId = id;
+                ModalManager.open("deleteConfirmModal");
+            }
+            
+            static async confirmDelete() {
+                try {
+                    const response = await fetch(`${Config.API_BASE}/${this.deleteId}`, {
+                        method: "DELETE"
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.closeDeleteConfirm();
+                    await this.loadStudents();
+                    
+                    ToastManager.success("Student deleted successfully!");
+                } catch (error) {
+                    console.error("Failed to delete student:", error);
+                    ToastManager.error("Failed to delete student. Please try again.");
+                }
+            }
+            
+            static closeModal() {
+                ModalManager.close("studentModal");
+                document.getElementById("studentForm").reset();
+                ValidationManager.clearErrors();
+                
+                const formControls = document.querySelectorAll('#studentForm .form-control');
+                formControls.forEach(control => {
+                    control.style.borderColor = '#d1d5db';
+                });
+                
+                const semesterSelect = document.getElementById("currentSemester");
+                semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+                semesterSelect.disabled = false;
+            }
+            
+            static closeDeleteConfirm() {
+                ModalManager.close("deleteConfirmModal");
+                this.deleteId = null;
+            }
+            
+            static openLogoutConfirm() {
+                ModalManager.open("logoutConfirmModal");
+            }
+            
+            static closeLogoutConfirm() {
+                ModalManager.close("logoutConfirmModal");
+            }
+            
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+            
+            static refreshStudents() {
+                ToastManager.info("Refreshing student list...");
+                this.loadStudents();
+            }
+            
+            static setupEventListeners() {
+                document.getElementById("searchInput").addEventListener("keypress", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.searchTable();
+                    }
+                });
+                
+                document.getElementById("studentForm").addEventListener("keypress", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.saveStudent();
+                    }
+                });
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            StudentManager.init();
+        });
+
+        // Make manager accessible globally for HTML onclick handlers
+        window.StudentManager = StudentManager;
+        window.ToastManager = ToastManager;
+        window.ModalManager = ModalManager;
+        window.ValidationManager = ValidationManager;
+    </script>
+</body>
+</html>

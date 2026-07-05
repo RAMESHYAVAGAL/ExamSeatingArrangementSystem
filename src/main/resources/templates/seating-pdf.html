@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+<title>Exam Seating Arrangement</title>
+
+<style>
+/* ===== PAGE FONT ===== */
+body {
+	font-family: Arial, sans-serif;
+	font-size: 11px;
+	line-height: 1.3; /* Added for better readability */
+	margin: 0;
+	padding: 10px;
+}
+
+/* ===== HEADER (PDF SAFE CENTERING) ===== */
+.header {
+	text-align: center;
+	margin-bottom: 18px;
+	padding-bottom: 10px;
+	border-bottom: 2px solid #333; /* Added separator */
+}
+
+.header h2 {
+	font-size: 16px;
+	font-weight: bold;
+	margin: 0 0 8px 0; /* Slightly increased bottom margin */
+}
+
+.header p {
+	margin: 3px 0; /* Slightly increased vertical spacing */
+	font-size: 11px;
+}
+
+/* ===== TABLE ===== */
+table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 11px;
+	margin-top: 5px;
+}
+
+th, td {
+	border: 1px solid #000;
+	padding: 5px 4px; /* Reduced padding slightly for compactness */
+	text-align: center;
+	vertical-align: middle; /* Ensure vertical alignment */
+}
+
+th {
+	background: #f1f5f9;
+	font-weight: bold;
+}
+
+/* Zebra striping for better readability */
+tbody tr:nth-child(even) {
+	background-color: #f8f9fa;
+}
+
+/* For empty signature cells */
+td:last-child {
+	min-height: 20px;
+}
+</style>
+</head>
+
+<body>
+
+	<!-- ===== HEADER ===== -->
+	<div class="header">
+		<h2>EXAM SEATING ARRANGEMENT</h2>
+
+		<p>
+			<b>Exam:</b> <span th:text="${seating.examName}"></span> &nbsp; |
+			&nbsp; <b>Date:</b> <span th:text="${seating.examDate}"></span>
+		</p>
+
+		<p>
+			<b>Time:</b> <span th:text="${seating.examTime}"></span> &nbsp; |
+			&nbsp; <b>Duration:</b> <span th:text="${seating.duration}"></span>
+		</p>
+
+		<p>
+			<b>Room:</b> <span th:text="${seating.roomName}"></span> &nbsp; |
+			&nbsp; <b>Invigilator:</b> <span
+				th:text="${seating.invigilatorName != null ? seating.invigilatorName : 'Not Assigned'}"></span>
+		</p>
+	</div>
+
+
+	<!-- ===== SEATING TABLE ===== -->
+	<table>
+		<thead>
+			<tr>
+				<th width="8%">Seat No</th>
+				<th width="15%">Hall Ticket No</th>
+				<th width="25%">Student Name</th>
+				<th width="12%">Roll No</th>
+				<th width="15%">Department</th>
+				<th width="8%">Year</th>
+				<th width="17%">Signature</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr th:each="s : ${seating.seats}"
+				th:class="${s.studentName == null or s.studentName == ''} ? 'empty-seat' : ''">
+				<td th:text="${s.seatNumber}"></td>
+				<td th:text="${s.hallTicketNo != null ? s.hallTicketNo : '-'}"></td>
+				<td th:text="${s.studentName != null ? s.studentName : 'Vacant'}"></td>
+				<td th:text="${s.rollNo != null ? s.rollNo : '-'}"></td>
+				<td th:text="${s.department != null ? s.department : '-'}"></td>
+				<td th:text="${s.year != null ? s.year : '-'}"></td>
+				<td></td>
+			</tr>
+		</tbody>
+	</table>
+	<div
+		style="text-align: center; margin-top: 20px; font-size: 10px; color: #666;">
+		Generated on: <span
+			th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}"></span>
+	</div>
+</body>
+</html>

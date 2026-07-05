@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Management</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        button, select {
+            cursor: pointer;
+        }
+
+        /* ===== Common Components ===== */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 25px;
+            width: 600px;
+            border-radius: 16px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-lg {
+            width: 800px;
+        }
+
+        .modal-content h3 {
+            color: #2a5298;
+            margin-bottom: 15px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 7px 14px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-info {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #17a2b8;
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, .2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h3 {
+            color: #2a5298;
+        }
+
+        /* ===== Table ===== */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th {
+            background: #2a5298;
+            color: #fff;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* ===== Form Elements ===== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .form-control:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23374151' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 35px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 3px;
+            display: none;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .help-text .valid {
+            color: #16a34a;
+        }
+
+        .help-text .invalid {
+            color: #dc2626;
+        }
+
+        /* ===== Two Column Form Layout ===== */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        /* ===== Search & Filter ===== */
+        .search-box {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .search-input {
+            padding: 10px 10px 10px 35px;
+            width: 250px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 10px center;
+            background-size: 16px;
+        }
+
+        /* ===== Pagination ===== */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pagination-info {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-size-select {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Action Buttons ===== */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 4px;
+        }
+
+        /* ===== Card Header ===== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-header h2 {
+            color: #2a5298;
+            font-size: 1.5rem;
+        }
+
+        /* ===== Subjects List ===== */
+        .subjects-container {
+            margin-top: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .subjects-header {
+            background: #f8f9fa;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .subjects-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .subjects-table th {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .subjects-table td {
+            padding: 10px;
+        }
+
+        /* ===== Badge ===== */
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .badge-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* ===== Quick Actions ===== */
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ===== Logout Modal Styles ===== */
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Delete Modal Styles ===== */
+        .delete-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .delete-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 8px;
+        }
+
+        .delete-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .delete-message .highlight {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .delete-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Modal Backdrop Fix ===== */
+        .modal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: -1;
+        }
+
+        /* ===== Date Range Info ===== */
+        .date-range-info {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .date-range-info .valid {
+            color: #16a34a;
+        }
+
+        .date-range-info .invalid {
+            color: #dc2626;
+        }
+
+        /* ===== Conflict Warning ===== */
+        .conflict-warning {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .conflict-warning .conflict-title {
+            color: #dc2626;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .conflict-warning .conflict-list {
+            color: #6b7280;
+            font-size: 13px;
+            padding-left: 20px;
+            margin: 5px 0;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 600px;
+            }
+            .modal-lg {
+                width: 95%;
+                max-width: 800px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .card-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box {
+                width: 100%;
+            }
+            .search-input {
+                width: 100%;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+            .delete-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .delete-actions .btn {
+                width: 100%;
+            }
+            .quick-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .quick-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation">
+        <h2>Admin Panel</h2>
+        <a href="/admin-dashboard">🏠 Home</a>
+        <a href="/students">👨‍🎓 Students</a>
+        <a href="/exams" class="active">📝 Exams</a>
+        <a href="/rooms">🏫 Rooms</a>
+        <a href="/invigilators">👨‍🏫 Invigilators</a>
+        <a href="/generate-seating">🔄 Generate Seating</a>
+        <a href="/view-seating">👀 View Seating</a>
+        <a href="/charts">📊 Charts</a>
+        <a href="/bulk-upload">📤 Bulk Upload</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h3>Exam Management</h3>
+            <button type="button" class="btn btn-danger" onclick="ExamManager.openLogoutConfirm()">
+                🚪 Logout
+            </button>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Quick Actions Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Quick Actions</h2>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-primary" onclick="ExamManager.openAddModal()">
+                    ➕ Add Exam
+                </button>
+                <button class="btn btn-success" onclick="window.location.href='/bulk-upload'">
+                    📤 Bulk Upload
+                </button>
+                <!--<button class="btn btn-info" onclick="ExamManager.loadExams()">
+                    🔄 Refresh List
+                </button>-->
+            </div>
+        </section>
+
+        <!-- Exam Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Exams List</h2>
+                <div class="search-box">
+                    <input type="text" 
+                           id="searchInput" 
+                           class="search-input" 
+                           placeholder="Search exams..."
+                           onkeyup="ExamManager.searchTable()">
+                </div>
+                <button class="btn btn-primary" onclick="ExamManager.openAddModal()">
+                    ＋ Add Exam
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Exam Name</th>
+                            <th>Exam Code</th>
+                            <th>Year</th>
+                            <th>Semester</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Subjects</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="examBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Showing <span id="startRow">1</span> to <span id="endRow">10</span> of 
+                    <span id="totalRows">0</span> entries
+                </div>
+                <div class="pagination-controls">
+                    <div>
+                        Show 
+                        <select id="pageSize" class="page-size-select" onchange="ExamManager.changePageSize()">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                        </select>
+                        entries
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button id="prevBtn" class="btn btn-secondary" onclick="ExamManager.prevPage()" disabled>
+                            ← Previous
+                        </button>
+                        <span id="pageInfo" style="font-weight: 600; color: #374151;">Page 1</span>
+                        <button id="nextBtn" class="btn btn-secondary" onclick="ExamManager.nextPage()" disabled>
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add/Edit Exam Modal -->
+    <div class="modal" id="examModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <h3 id="modalTitle">Add Exam</h3>
+            <form id="examForm">
+                <input type="hidden" id="examId">
+                
+                <!-- Row 1: Exam Name & Code -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="examName" class="form-label">Exam Name *</label>
+                        <input type="text" id="examName" class="form-control" placeholder="Enter exam name">
+                        <div id="examNameErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="examCode" class="form-label">Exam Code *</label>
+                        <input type="text" id="examCode" class="form-control" placeholder="Enter exam code">
+                        <div id="examCodeErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 2: Year & Semester -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="year" class="form-label">Year *</label>
+                        <select id="year" class="form-control" onchange="ExamManager.updateSemesters()">
+                            <option value="">Select Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                            <option value="5">5th Year</option>
+                        </select>
+                        <div id="yearErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="semester" class="form-label">Semester *</label>
+                        <select id="semester" class="form-control">
+                            <option value="">Select Semester</option>
+                        </select>
+                        <div id="semesterErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Start Date & End Date -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="startDate" class="form-label">Start Date *</label>
+                        <input type="date" id="startDate" class="form-control" onchange="ExamManager.validateDates()">
+                        <div id="startDateErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="endDate" class="form-label">End Date *</label>
+                        <input type="date" id="endDate" class="form-control" onchange="ExamManager.validateDates()">
+                        <div id="endDateErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Date Validation Info -->
+                <div id="dateValidationInfo" class="date-range-info" style="display: none;">
+                    <span id="dateValidationMessage"></span>
+                </div>
+            </form>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="ExamManager.closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="ExamManager.saveExam()">Save Exam</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Subjects Modal -->
+    <div class="modal" id="subjectsModal" role="dialog" aria-modal="true" aria-labelledby="subjectsModalTitle">
+        <div class="modal-content modal-lg">
+            <h3 id="subjectsModalTitle">Manage Subjects for Exam: <span id="currentExamNameDisplay"></span></h3>
+            
+            <!-- Exam Date Range Info -->
+            <div style="background: #e8f4fd; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px;">
+                <strong>Exam Period:</strong> 
+                <span id="examStartDateDisplay" style="color: #1e3c72;"></span> 
+                to 
+                <span id="examEndDateDisplay" style="color: #1e3c72;"></span>
+            </div>
+            
+            <!-- Subjects Table -->
+            <div class="subjects-container">
+                <div class="subjects-header">
+                    <h4 style="margin: 0; color: #2a5298;">Subjects List</h4>
+                    <button type="button" class="btn btn-success btn-sm" onclick="SubjectsManager.openAddSubjectModal()">
+                        ＋ Add Subject
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="subjects-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Subject Name</th>
+                                <th>Subject Code</th>
+                                <th>Exam Date</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Total Marks</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subjectsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="SubjectsManager.closeSubjectsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Subject Modal -->
+    <div class="modal" id="subjectModal" role="dialog" aria-modal="true" aria-labelledby="subjectModalTitle">
+        <div class="modal-content">
+            <h3 id="subjectModalTitle">Add Subject</h3>
+            <form id="subjectForm">
+                <input type="hidden" id="subjectId">
+                <input type="hidden" id="examIdForSubject">
+                
+                <!-- Row 1: Subject Name & Code -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="subjectName" class="form-label">Subject Name *</label>
+                        <input type="text" id="subjectName" class="form-control" placeholder="Enter subject name">
+                        <div id="subjectNameErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="subjectCode" class="form-label">Subject Code *</label>
+                        <input type="text" id="subjectCode" class="form-control" placeholder="Enter subject code">
+                        <div id="subjectCodeErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 2: Subject Exam Date -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="subjectExamDate" class="form-label">Subject Exam Date *</label>
+                        <input type="date" id="subjectExamDate" class="form-control" onchange="SubjectsManager.validateSubjectDate()">
+                        <div id="subjectDateErr" class="error-text"></div>
+                        <div id="subjectDateHelp" class="help-text">
+                            Exam period: <span id="subjectDateRangeHelp"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Start Time & End Time -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="subjectStartTime" class="form-label">Start Time *</label>
+                        <input type="time" id="subjectStartTime" class="form-control" onchange="SubjectsManager.checkConflicts()">
+                        <div id="startTimeErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="subjectEndTime" class="form-label">End Time *</label>
+                        <input type="time" id="subjectEndTime" class="form-control" onchange="SubjectsManager.checkConflicts()">
+                        <div id="endTimeErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 4: Duration & Total Marks -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="subjectDuration" class="form-label">Duration (minutes) *</label>
+                        <input type="number" id="subjectDuration" class="form-control" placeholder="Enter duration in minutes" min="1" onchange="SubjectsManager.checkConflicts()">
+                        <div id="durationErr" class="error-text"></div>
+                    </div>
+                    <div class="form-col">
+                        <label for="totalMarks" class="form-label">Total Marks *</label>
+                        <input type="number" id="totalMarks" class="form-control" placeholder="Enter total marks" min="0">
+                        <div id="marksErr" class="error-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Conflict Warning -->
+                <div id="conflictWarning" class="conflict-warning">
+                    <div class="conflict-title">⚠️ Schedule Conflict Detected</div>
+                    <div id="conflictList" class="conflict-list"></div>
+                </div>
+            </form>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="SubjectsManager.closeSubjectModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="SubjectsManager.saveSubject()">Save Subject</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Exam Confirmation Modal -->
+    <div class="modal" id="deleteConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="delete-icon">📝</div>
+            <div class="delete-title">Confirm Delete Exam</div>
+            <div class="delete-message">
+                Are you sure you want to delete this exam?<br>
+                This action <span class="highlight">cannot be undone</span> and all associated subjects will be permanently removed.
+            </div>
+            <div class="delete-actions">
+                <button class="btn btn-cancel" onclick="ExamManager.closeDeleteConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-delete" onclick="ExamManager.confirmDelete()">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Subject Confirmation Modal -->
+    <div class="modal" id="deleteSubjectConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="delete-icon">📖</div>
+            <div class="delete-title">Confirm Delete Subject</div>
+            <div class="delete-message">
+                Are you sure you want to delete this subject?<br>
+                This action <span class="highlight">cannot be undone</span> and all associated data will be permanently removed.
+            </div>
+            <div class="delete-actions">
+                <button class="btn btn-cancel" onclick="SubjectsManager.closeDeleteConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-delete" onclick="SubjectsManager.confirmDelete()">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn btn-cancel" onclick="ExamManager.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-logout" onclick="ExamManager.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 Exam Seating Arrangement System
+    </footer>
+
+    <script>
+        // Configuration
+        const Config = {
+            API_BASE: "/api/admin/exams",
+            SUBJECTS_API_BASE: "/api/admin/subjects",
+            TOAST_DURATION: 3500,
+            DEFAULT_ROWS_PER_PAGE: 10
+        };
+
+        // Toast Notification Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, Config.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+        }
+
+        // Modal Manager
+        class ModalManager {
+            static open(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                    modal.addEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static close(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static closeAll() {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                });
+                document.body.style.overflow = "";
+            }
+            
+            static handleBackdropClick(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.stopPropagation();
+                }
+            }
+        }
+
+        // Form Validation Manager
+        class ValidationManager {
+            static clearErrors() {
+                document.querySelectorAll(".error-text").forEach(el => {
+                    el.style.display = "none";
+                    el.textContent = "";
+                });
+                
+                const formFields = document.querySelectorAll('#examForm .form-control, #subjectForm .form-control');
+                formFields.forEach(field => {
+                    field.style.borderColor = '#d1d5db';
+                });
+            }
+            
+            static setError(fieldId, errorId, message) {
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = "block";
+                }
+                const fieldEl = document.getElementById(fieldId);
+                if (fieldEl) {
+                    fieldEl.style.borderColor = "#dc2626";
+                    fieldEl.focus();
+                }
+            }
+            
+            static clearFieldError(fieldId, errorId) {
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) {
+                    errorEl.style.display = "none";
+                }
+                const fieldEl = document.getElementById(fieldId);
+                if (fieldEl) {
+                    fieldEl.style.borderColor = "#d1d5db";
+                }
+            }
+            
+            static validateExam() {
+                this.clearErrors();
+                let isValid = true;
+                
+                const examName = document.getElementById("examName").value.trim();
+                if (!examName) {
+                    this.setError("examName", "examNameErr", "Exam Name is required");
+                    isValid = false;
+                }
+                
+                const examCode = document.getElementById("examCode").value.trim();
+                if (!examCode) {
+                    this.setError("examCode", "examCodeErr", "Exam Code is required");
+                    isValid = false;
+                }
+                
+                const year = document.getElementById("year").value;
+                if (!year) {
+                    this.setError("year", "yearErr", "Please select a year");
+                    isValid = false;
+                }
+                
+                const semester = document.getElementById("semester").value;
+                if (!semester) {
+                    this.setError("semester", "semesterErr", "Please select a semester");
+                    isValid = false;
+                }
+                
+                const startDate = document.getElementById("startDate").value;
+                if (!startDate) {
+                    this.setError("startDate", "startDateErr", "Start Date is required");
+                    isValid = false;
+                }
+                
+                const endDate = document.getElementById("endDate").value;
+                if (!endDate) {
+                    this.setError("endDate", "endDateErr", "End Date is required");
+                    isValid = false;
+                }
+                
+                if (startDate && endDate && endDate < startDate) {
+                    this.setError("endDate", "endDateErr", "End Date cannot be before Start Date");
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            static validateSubject() {
+                this.clearErrors();
+                let isValid = true;
+                
+                const subjectName = document.getElementById("subjectName").value.trim();
+                if (!subjectName) {
+                    this.setError("subjectName", "subjectNameErr", "Subject Name is required");
+                    isValid = false;
+                }
+                
+                const subjectCode = document.getElementById("subjectCode").value.trim();
+                if (!subjectCode) {
+                    this.setError("subjectCode", "subjectCodeErr", "Subject Code is required");
+                    isValid = false;
+                }
+                
+                const subjectExamDate = document.getElementById("subjectExamDate").value;
+                if (!subjectExamDate) {
+                    this.setError("subjectExamDate", "subjectDateErr", "Subject Exam Date is required");
+                    isValid = false;
+                }
+                
+                const startTime = document.getElementById("subjectStartTime").value;
+                if (!startTime) {
+                    this.setError("subjectStartTime", "startTimeErr", "Start Time is required");
+                    isValid = false;
+                }
+                
+                const endTime = document.getElementById("subjectEndTime").value;
+                if (!endTime) {
+                    this.setError("subjectEndTime", "endTimeErr", "End Time is required");
+                    isValid = false;
+                }
+                
+                const duration = document.getElementById("subjectDuration").value.trim();
+                if (!duration || duration <= 0) {
+                    this.setError("subjectDuration", "durationErr", "Duration must be greater than 0");
+                    isValid = false;
+                }
+                
+                const totalMarks = document.getElementById("totalMarks").value.trim();
+                if (!totalMarks || totalMarks < 0) {
+                    this.setError("totalMarks", "marksErr", "Total Marks must be greater than or equal to 0");
+                    isValid = false;
+                }
+                
+                // Check for conflicts
+                if (SubjectsManager.hasConflicts()) {
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            static setupRealTimeValidation() {
+                // Exam Name
+                document.getElementById("examName").addEventListener("input", () => {
+                    if (document.getElementById("examName").value.trim()) {
+                        this.clearFieldError("examName", "examNameErr");
+                    }
+                });
+                
+                // Exam Code
+                document.getElementById("examCode").addEventListener("input", () => {
+                    if (document.getElementById("examCode").value.trim()) {
+                        this.clearFieldError("examCode", "examCodeErr");
+                    }
+                });
+                
+                // Year
+                document.getElementById("year").addEventListener("change", () => {
+                    if (document.getElementById("year").value) {
+                        this.clearFieldError("year", "yearErr");
+                    }
+                });
+                
+                // Semester
+                document.getElementById("semester").addEventListener("change", () => {
+                    if (document.getElementById("semester").value) {
+                        this.clearFieldError("semester", "semesterErr");
+                    }
+                });
+                
+                // Start Date
+                document.getElementById("startDate").addEventListener("input", () => {
+                    if (document.getElementById("startDate").value) {
+                        this.clearFieldError("startDate", "startDateErr");
+                        ExamManager.validateDates();
+                    }
+                });
+                
+                // End Date
+                document.getElementById("endDate").addEventListener("input", () => {
+                    if (document.getElementById("endDate").value) {
+                        this.clearFieldError("endDate", "endDateErr");
+                        ExamManager.validateDates();
+                    }
+                });
+                
+                // Subject Name
+                document.getElementById("subjectName").addEventListener("input", () => {
+                    if (document.getElementById("subjectName").value.trim()) {
+                        this.clearFieldError("subjectName", "subjectNameErr");
+                    }
+                });
+                
+                // Subject Code
+                document.getElementById("subjectCode").addEventListener("input", () => {
+                    if (document.getElementById("subjectCode").value.trim()) {
+                        this.clearFieldError("subjectCode", "subjectCodeErr");
+                    }
+                });
+                
+                // Subject Exam Date
+                document.getElementById("subjectExamDate").addEventListener("input", () => {
+                    if (document.getElementById("subjectExamDate").value) {
+                        this.clearFieldError("subjectExamDate", "subjectDateErr");
+                        SubjectsManager.validateSubjectDate();
+                    }
+                });
+                
+                // Start Time
+                document.getElementById("subjectStartTime").addEventListener("input", () => {
+                    if (document.getElementById("subjectStartTime").value) {
+                        this.clearFieldError("subjectStartTime", "startTimeErr");
+                        SubjectsManager.checkConflicts();
+                    }
+                });
+                
+                // End Time
+                document.getElementById("subjectEndTime").addEventListener("input", () => {
+                    if (document.getElementById("subjectEndTime").value) {
+                        this.clearFieldError("subjectEndTime", "endTimeErr");
+                        SubjectsManager.checkConflicts();
+                    }
+                });
+                
+                // Duration
+                document.getElementById("subjectDuration").addEventListener("input", () => {
+                    const value = document.getElementById("subjectDuration").value.trim();
+                    if (value && value > 0) {
+                        this.clearFieldError("subjectDuration", "durationErr");
+                        SubjectsManager.checkConflicts();
+                    }
+                });
+                
+                // Total Marks
+                document.getElementById("totalMarks").addEventListener("input", () => {
+                    const value = document.getElementById("totalMarks").value.trim();
+                    if (value && value >= 0) {
+                        this.clearFieldError("totalMarks", "marksErr");
+                    }
+                });
+            }
+        }
+        
+        // Subjects Management Class
+        class SubjectsManager {
+            static currentExamId = null;
+            static currentExamName = null;
+            static subjects = [];
+            static editSubjectId = null;
+            static deleteSubjectId = null;
+            static conflicts = [];
+            static examStartDate = null;
+            static examEndDate = null;
+            
+            static async openSubjectsModal(examId, examName) {
+                this.currentExamId = examId;
+                this.currentExamName = examName;
+                
+                // Fix: Use the correct element ID
+                const nameDisplay = document.getElementById("currentExamNameDisplay");
+                if (nameDisplay) {
+                    nameDisplay.textContent = examName;
+                }
+                document.getElementById("examIdForSubject").value = examId;
+                
+                await this.loadExamDetails();
+                await this.loadSubjects();
+                ModalManager.open("subjectsModal");
+            }
+            
+            static closeSubjectsModal() {
+                ModalManager.close("subjectsModal");
+                this.currentExamId = null;
+                this.currentExamName = null;
+                this.subjects = [];
+                this.examStartDate = null;
+                this.examEndDate = null;
+            }
+            
+            static async loadExamDetails() {
+                try {
+                    const response = await fetch(`${Config.API_BASE}/${this.currentExamId}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const exam = await response.json();
+                    const startDisplay = document.getElementById("examStartDateDisplay");
+                    const endDisplay = document.getElementById("examEndDateDisplay");
+                    
+                    if (startDisplay) startDisplay.textContent = exam.startDate || 'N/A';
+                    if (endDisplay) endDisplay.textContent = exam.endDate || 'N/A';
+                    
+                    this.examStartDate = exam.startDate;
+                    this.examEndDate = exam.endDate;
+                } catch (error) {
+                    console.error("Failed to load exam details:", error);
+                }
+            }
+            
+            static async loadSubjects() {
+                if (!this.currentExamId) return;
+                
+                try {
+                    const response = await fetch(`${Config.SUBJECTS_API_BASE}/exam/${this.currentExamId}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.subjects = await response.json();
+                    this.renderSubjectsTable();
+                } catch (error) {
+                    console.error("Failed to load subjects:", error);
+                    ToastManager.error("Failed to load subjects.");
+                }
+            }
+            
+            static renderSubjectsTable() {
+                const tbody = document.getElementById("subjectsBody");
+                if (!tbody) return;
+                
+                if (this.subjects.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align: center; color: #6b7280; padding: 20px;">
+                                No subjects added yet. Click "Add Subject" to add one.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = this.subjects.map(subject => `
+                    <tr>
+                        <td>${subject.id}</td>
+                        <td>${subject.subjectName || '-'}</td>
+                        <td>${subject.subjectCode || '-'}</td>
+                        <td>${subject.examDate || '-'}</td>
+                        <td>${subject.startTime || '-'}</td>
+                        <td>${subject.endTime || '-'}</td>
+                        <td>${subject.duration || '-'} min</td>
+                        <td>${subject.totalMarks || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-info btn-sm" 
+                                        onclick="SubjectsManager.editSubject(${subject.id})">
+                                    ✏️ Edit
+                                </button>
+                                <button class="btn btn-danger btn-sm" 
+                                        onclick="SubjectsManager.deleteSubject(${subject.id})">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join("");
+            }
+            
+            static openAddSubjectModal() {
+                this.editSubjectId = null;
+                this.conflicts = [];
+                document.getElementById("subjectModalTitle").textContent = "Add Subject";
+                document.getElementById("subjectId").value = "";
+                document.getElementById("subjectForm").reset();
+                document.getElementById("conflictWarning").style.display = "none";
+                
+                const now = new Date();
+                const startTime = new Date(now.getTime() + 30 * 60000).toTimeString().slice(0, 5);
+                const endTime = new Date(now.getTime() + 90 * 60000).toTimeString().slice(0, 5);
+                
+                document.getElementById("subjectStartTime").value = startTime;
+                document.getElementById("subjectEndTime").value = endTime;
+                document.getElementById("subjectDuration").value = "60";
+                document.getElementById("totalMarks").value = "100";
+                
+                if (this.examStartDate) {
+                    document.getElementById("subjectExamDate").value = this.examStartDate;
+                }
+                
+                this.updateDateRangeHelp();
+                this.validateSubjectDate();
+                
+                ModalManager.open("subjectModal");
+            }
+            
+            static async editSubject(subjectId) {
+                try {
+                    const response = await fetch(`${Config.SUBJECTS_API_BASE}/${subjectId}`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    const subject = await response.json();
+                    
+                    this.editSubjectId = subjectId;
+                    this.conflicts = [];
+                    document.getElementById("subjectModalTitle").textContent = "Edit Subject";
+                    document.getElementById("subjectId").value = subject.id;
+                    document.getElementById("subjectName").value = subject.subjectName || "";
+                    document.getElementById("subjectCode").value = subject.subjectCode || "";
+                    document.getElementById("subjectExamDate").value = subject.examDate || "";
+                    document.getElementById("subjectStartTime").value = subject.startTime || "";
+                    document.getElementById("subjectEndTime").value = subject.endTime || "";
+                    document.getElementById("subjectDuration").value = subject.duration || "";
+                    document.getElementById("totalMarks").value = subject.totalMarks || "";
+                    document.getElementById("conflictWarning").style.display = "none";
+                    
+                    this.updateDateRangeHelp();
+                    this.validateSubjectDate();
+                    this.checkConflicts();
+                    
+                    ModalManager.open("subjectModal");
+                } catch (error) {
+                    console.error("Failed to load subject:", error);
+                    ToastManager.error("Failed to load subject details: " + error.message);
+                }
+            }
+            
+            static updateDateRangeHelp() {
+                const helpEl = document.getElementById("subjectDateRangeHelp");
+                if (helpEl) {
+                    if (this.examStartDate && this.examEndDate) {
+                        helpEl.textContent = `${this.examStartDate} to ${this.examEndDate}`;
+                    } else {
+                        helpEl.textContent = "Please set exam dates first";
+                    }
+                }
+            }
+            
+            static validateSubjectDate() {
+                const date = document.getElementById("subjectExamDate").value;
+                const helpEl = document.getElementById("subjectDateHelp");
+                const errorEl = document.getElementById("subjectDateErr");
+                
+                if (date && this.examStartDate && this.examEndDate) {
+                    if (date < this.examStartDate || date > this.examEndDate) {
+                        if (helpEl) {
+                            helpEl.innerHTML = `⚠️ Date must be between <span class="invalid">${this.examStartDate}</span> and <span class="invalid">${this.examEndDate}</span>`;
+                        }
+                        if (errorEl) {
+                            errorEl.textContent = `Exam date must be within the exam period (${this.examStartDate} to ${this.examEndDate})`;
+                            errorEl.style.display = "block";
+                        }
+                        document.getElementById("subjectExamDate").style.borderColor = "#dc2626";
+                    } else {
+                        if (helpEl) {
+                            helpEl.innerHTML = `✅ Date is within exam period: <span class="valid">${this.examStartDate}</span> to <span class="valid">${this.examEndDate}</span>`;
+                        }
+                        if (errorEl) {
+                            errorEl.style.display = "none";
+                        }
+                        document.getElementById("subjectExamDate").style.borderColor = "#16a34a";
+                    }
+                } else if (date) {
+                    if (helpEl) {
+                        helpEl.innerHTML = `📅 Selected date: ${date}`;
+                    }
+                }
+            }
+            
+            static checkConflicts() {
+                const examDate = document.getElementById("subjectExamDate").value;
+                const startTime = document.getElementById("subjectStartTime").value;
+                const endTime = document.getElementById("subjectEndTime").value;
+                
+                this.conflicts = [];
+                
+                if (!examDate || !startTime || !endTime) return;
+                
+                const currentId = this.editSubjectId ? parseInt(this.editSubjectId) : null;
+                
+                for (const subject of this.subjects) {
+                    if (currentId && subject.id === currentId) continue;
+                    if (subject.examDate !== examDate) continue;
+                    
+                    const sStart = subject.startTime;
+                    const sEnd = subject.endTime;
+                    
+                    if ((startTime >= sStart && startTime < sEnd) || 
+                        (endTime > sStart && endTime <= sEnd) ||
+                        (startTime <= sStart && endTime >= sEnd)) {
+                        this.conflicts.push({
+                            subjectName: subject.subjectName,
+                            subjectCode: subject.subjectCode,
+                            startTime: sStart,
+                            endTime: sEnd
+                        });
+                    }
+                }
+                
+                this.showConflicts();
+            }
+            
+            static showConflicts() {
+                const warningEl = document.getElementById("conflictWarning");
+                const listEl = document.getElementById("conflictList");
+                
+                if (this.conflicts.length > 0) {
+                    if (warningEl) warningEl.style.display = "block";
+                    if (listEl) {
+                        listEl.innerHTML = this.conflicts.map(c => 
+                            `<li>${c.subjectName} (${c.subjectCode}) - ${c.startTime} to ${c.endTime}</li>`
+                        ).join("");
+                    }
+                } else {
+                    if (warningEl) warningEl.style.display = "none";
+                }
+            }
+            
+            static hasConflicts() {
+                return this.conflicts.length > 0;
+            }
+            
+            static async saveSubject() {
+                if (!ValidationManager.validateSubject()) {
+                    ToastManager.warning("Please fix the validation errors.");
+                    return;
+                }
+                
+                const subject = {
+                    id: document.getElementById("subjectId").value || null,
+                    examId: parseInt(document.getElementById("examIdForSubject").value),
+                    subjectName: document.getElementById("subjectName").value.trim(),
+                    subjectCode: document.getElementById("subjectCode").value.trim(),
+                    examDate: document.getElementById("subjectExamDate").value,
+                    startTime: document.getElementById("subjectStartTime").value,
+                    endTime: document.getElementById("subjectEndTime").value,
+                    duration: parseInt(document.getElementById("subjectDuration").value.trim()),
+                    totalMarks: parseInt(document.getElementById("totalMarks").value.trim())
+                };
+                
+                try {
+                    const url = this.editSubjectId ? 
+                        `${Config.SUBJECTS_API_BASE}/${this.editSubjectId}` : 
+                        Config.SUBJECTS_API_BASE;
+                    const method = this.editSubjectId ? "PUT" : "POST";
+                    
+                    const response = await fetch(url, {
+                        method,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(subject)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    this.closeSubjectModal();
+                    await this.loadSubjects();
+                    
+                    ExamManager.loadExams();
+                    
+                    ToastManager.success(
+                        this.editSubjectId 
+                            ? "Subject updated successfully!" 
+                            : "Subject added successfully!"
+                    );
+                } catch (error) {
+                    console.error("Failed to save subject:", error);
+                    ToastManager.error(error.message || "Failed to save subject. Please try again.");
+                }
+            }
+            
+            static closeSubjectModal() {
+                ModalManager.close("subjectModal");
+                document.getElementById("subjectForm").reset();
+                document.getElementById("conflictWarning").style.display = "none";
+                this.conflicts = [];
+            }
+            
+            static deleteSubject(subjectId) {
+                this.deleteSubjectId = subjectId;
+                ModalManager.open("deleteSubjectConfirmModal");
+            }
+            
+            static async confirmDelete() {
+                try {
+                    const response = await fetch(`${Config.SUBJECTS_API_BASE}/${this.deleteSubjectId}`, {
+                        method: "DELETE"
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.closeDeleteConfirm();
+                    await this.loadSubjects();
+                    
+                    ExamManager.loadExams();
+                    
+                    ToastManager.success("Subject deleted successfully!");
+                } catch (error) {
+                    console.error("Failed to delete subject:", error);
+                    ToastManager.error("Failed to delete subject. Please try again.");
+                }
+            }
+            
+            static closeDeleteConfirm() {
+                ModalManager.close("deleteSubjectConfirmModal");
+                this.deleteSubjectId = null;
+            }
+        }
+
+        // Exam Management Main Class
+        class ExamManager {
+            static exams = [];
+            static filteredExams = [];
+            static currentPage = 1;
+            static rowsPerPage = Config.DEFAULT_ROWS_PER_PAGE;
+            static editId = null;
+            static deleteId = null;
+            
+            static SEMESTER_MAP = {
+                '1': ['1', '2'],
+                '2': ['3', '4'],
+                '3': ['5', '6'],
+                '4': ['7', '8'],
+                '5': ['9', '10']
+            };
+            
+            static async init() {
+                await this.loadExams();
+                ValidationManager.setupRealTimeValidation();
+                this.setupEventListeners();
+            }
+            
+            static updateSemesters() {
+                const year = document.getElementById("year").value;
+                const semesterSelect = document.getElementById("semester");
+                const currentValue = semesterSelect.value;
+                
+                semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+                
+                if (year && this.SEMESTER_MAP[year]) {
+                    const semesters = this.SEMESTER_MAP[year];
+                    semesters.forEach(sem => {
+                        const option = document.createElement("option");
+                        option.value = sem;
+                        option.textContent = `Semester ${sem}`;
+                        semesterSelect.appendChild(option);
+                    });
+                    
+                    if (currentValue && semesters.includes(currentValue)) {
+                        semesterSelect.value = currentValue;
+                    }
+                }
+                
+                if (semesterSelect.value) {
+                    ValidationManager.clearFieldError("semester", "semesterErr");
+                }
+            }
+            
+            static validateDates() {
+                const startDate = document.getElementById("startDate").value;
+                const endDate = document.getElementById("endDate").value;
+                const validationInfo = document.getElementById("dateValidationInfo");
+                const messageEl = document.getElementById("dateValidationMessage");
+                
+                if (startDate && endDate) {
+                    validationInfo.style.display = "block";
+                    if (endDate < startDate) {
+                        messageEl.innerHTML = '⚠️ End Date cannot be before Start Date. Please select a valid date range.';
+                        messageEl.style.color = "#dc2626";
+                        document.getElementById("endDate").style.borderColor = "#dc2626";
+                    } else {
+                        messageEl.innerHTML = '✅ Valid date range selected.';
+                        messageEl.style.color = "#16a34a";
+                        document.getElementById("endDate").style.borderColor = "#d1d5db";
+                        ValidationManager.clearFieldError("endDate", "endDateErr");
+                    }
+                } else if (startDate && !endDate) {
+                    document.getElementById("endDate").min = startDate;
+                    validationInfo.style.display = "none";
+                } else {
+                    validationInfo.style.display = "none";
+                }
+            }
+            
+            static async loadExams() {
+                try {
+                    const response = await fetch(Config.API_BASE);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.exams = await response.json();
+                    this.filteredExams = [...this.exams];
+                    this.currentPage = 1;
+                    this.renderTable();
+                } catch (error) {
+                    console.error("Failed to load exams:", error);
+                    ToastManager.error("Failed to load exams. Please refresh the page.");
+                }
+            }
+            
+            static renderTable() {
+                const tbody = document.getElementById("examBody");
+                if (!tbody) return;
+                
+                const start = (this.currentPage - 1) * this.rowsPerPage;
+                const end = start + this.rowsPerPage;
+                const pageExams = this.filteredExams.slice(start, end);
+                
+                if (pageExams.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align: center; color: #6b7280; padding: 20px;">
+                                No exams found. Click "Add Exam" to create one.
+                            </td>
+                        </tr>
+                    `;
+                    this.updatePaginationInfo();
+                    return;
+                }
+                
+                tbody.innerHTML = pageExams.map(exam => `
+                    <tr>
+                        <td>${exam.id}</td>
+                        <td>${exam.examName || '-'}</td>
+                        <td>${exam.examCode || '-'}</td>
+                        <td>${exam.year || '-'}</td>
+                        <td>${exam.semester || '-'}</td>
+                        <td>${exam.startDate || '-'}</td>
+                        <td>${exam.endDate || '-'}</td>
+                        <td>
+                            <span class="badge ${exam.subjectCount > 0 ? 'badge-success' : 'badge-warning'}">
+                                ${exam.subjectCount || 0} Subjects
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-info action-btn" 
+                                        onclick="ExamManager.editExam(${exam.id})">
+                                    ✏️ Edit
+                                </button>
+                                <button class="btn btn-success action-btn" 
+                                        onclick="ExamManager.manageSubjects(${exam.id}, '${exam.examName || ''}')">
+                                    📚 Subjects
+                                </button>
+                                <button class="btn btn-danger action-btn" 
+                                        onclick="ExamManager.deleteExam(${exam.id})">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join("");
+                
+                this.updatePaginationInfo();
+            }
+            
+            static updatePaginationInfo() {
+                const total = this.filteredExams.length;
+                const start = (this.currentPage - 1) * this.rowsPerPage + 1;
+                const end = Math.min(this.currentPage * this.rowsPerPage, total);
+                const totalPages = Math.ceil(total / this.rowsPerPage);
+                
+                document.getElementById("startRow").textContent = total === 0 ? 0 : start;
+                document.getElementById("endRow").textContent = end;
+                document.getElementById("totalRows").textContent = total;
+                document.getElementById("pageInfo").textContent = `Page ${this.currentPage} of ${totalPages || 1}`;
+                
+                document.getElementById("prevBtn").disabled = this.currentPage === 1;
+                document.getElementById("nextBtn").disabled = this.currentPage === totalPages || totalPages === 0;
+            }
+            
+            static searchTable() {
+                const query = document.getElementById("searchInput").value.toLowerCase().trim();
+                
+                this.filteredExams = this.exams.filter(exam =>
+                    String(exam.id).includes(query) ||
+                    (exam.examName || "").toLowerCase().includes(query) ||
+                    (exam.examCode || "").toLowerCase().includes(query) ||
+                    String(exam.year || "").includes(query) ||
+                    String(exam.semester || "").includes(query) ||
+                    (exam.startDate || "").includes(query) ||
+                    (exam.endDate || "").includes(query)
+                );
+                
+                this.currentPage = 1;
+                this.renderTable();
+            }
+            
+            static changePageSize() {
+                this.rowsPerPage = parseInt(document.getElementById("pageSize").value);
+                this.currentPage = 1;
+                this.renderTable();
+            }
+            
+            static nextPage() {
+                const totalPages = Math.ceil(this.filteredExams.length / this.rowsPerPage);
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.renderTable();
+                }
+            }
+            
+            static prevPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.renderTable();
+                }
+            }
+            
+            static openAddModal() {
+                this.editId = null;
+                document.getElementById("modalTitle").textContent = "Add Exam";
+                document.getElementById("examId").value = "";
+                document.getElementById("examForm").reset();
+                
+                ValidationManager.clearErrors();
+                
+                const formControls = document.querySelectorAll('#examForm .form-control');
+                formControls.forEach(control => {
+                    control.style.borderColor = '#d1d5db';
+                });
+                
+                const today = new Date().toISOString().split('T')[0];
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                const nextWeekStr = nextWeek.toISOString().split('T')[0];
+                
+                document.getElementById("startDate").value = today;
+                document.getElementById("endDate").value = nextWeekStr;
+                document.getElementById("endDate").min = today;
+                
+                const semesterSelect = document.getElementById("semester");
+                semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+                
+                document.getElementById("dateValidationInfo").style.display = "none";
+                
+                ModalManager.open("examModal");
+            }
+            
+            static async editExam(id) {
+                try {
+                    const response = await fetch(`${Config.API_BASE}/${id}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const exam = await response.json();
+                    this.editId = id;
+                    
+                    document.getElementById("modalTitle").textContent = "Edit Exam";
+                    document.getElementById("examId").value = exam.id;
+                    document.getElementById("examName").value = exam.examName || "";
+                    document.getElementById("examCode").value = exam.examCode || "";
+                    document.getElementById("year").value = exam.year || "";
+                    
+                    this.updateSemesters();
+                    
+                    if (exam.semester) {
+                        document.getElementById("semester").value = exam.semester.toString();
+                    }
+                    
+                    document.getElementById("startDate").value = exam.startDate || "";
+                    document.getElementById("endDate").value = exam.endDate || "";
+                    
+                    if (exam.startDate) {
+                        document.getElementById("endDate").min = exam.startDate;
+                    }
+                    
+                    this.validateDates();
+                    
+                    ValidationManager.clearErrors();
+                    ModalManager.open("examModal");
+                } catch (error) {
+                    console.error("Failed to load exam:", error);
+                    ToastManager.error("Failed to load exam details.");
+                }
+            }
+            
+            static manageSubjects(examId, examName) {
+                SubjectsManager.openSubjectsModal(examId, examName);
+            }
+            
+            static async saveExam() {
+                if (!ValidationManager.validateExam()) {
+                    ToastManager.warning("Please fix the validation errors.");
+                    return;
+                }
+                
+                const exam = {
+                    id: document.getElementById("examId").value || null,
+                    examName: document.getElementById("examName").value.trim(),
+                    examCode: document.getElementById("examCode").value.trim(),
+                    year: parseInt(document.getElementById("year").value),
+                    semester: parseInt(document.getElementById("semester").value),
+                    startDate: document.getElementById("startDate").value,
+                    endDate: document.getElementById("endDate").value
+                };
+                
+                try {
+                    const url = this.editId ? `${Config.API_BASE}/${this.editId}` : Config.API_BASE;
+                    const method = this.editId ? "PUT" : "POST";
+                    
+                    const response = await fetch(url, {
+                        method,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(exam)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    this.closeModal();
+                    await this.loadExams();
+                    
+                    ToastManager.success(
+                        this.editId 
+                            ? "Exam updated successfully!" 
+                            : "Exam added successfully!"
+                    );
+                } catch (error) {
+                    console.error("Failed to save exam:", error);
+                    ToastManager.error(error.message || "Failed to save exam. Please try again.");
+                }
+            }
+            
+            static deleteExam(id) {
+                this.deleteId = id;
+                ModalManager.open("deleteConfirmModal");
+            }
+            
+            static async confirmDelete() {
+                try {
+                    const response = await fetch(`${Config.API_BASE}/${this.deleteId}`, {
+                        method: "DELETE"
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    this.closeDeleteConfirm();
+                    await this.loadExams();
+                    
+                    ToastManager.success("Exam deleted successfully!");
+                } catch (error) {
+                    console.error("Failed to delete exam:", error);
+                    ToastManager.error("Failed to delete exam. Please try again.");
+                }
+            }
+            
+            static closeModal() {
+                ModalManager.close("examModal");
+                document.getElementById("examForm").reset();
+                ValidationManager.clearErrors();
+                
+                const formControls = document.querySelectorAll('#examForm .form-control');
+                formControls.forEach(control => {
+                    control.style.borderColor = '#d1d5db';
+                });
+                
+                const semesterSelect = document.getElementById("semester");
+                semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+                
+                document.getElementById("dateValidationInfo").style.display = "none";
+            }
+            
+            static closeDeleteConfirm() {
+                ModalManager.close("deleteConfirmModal");
+                this.deleteId = null;
+            }
+            
+            static openLogoutConfirm() {
+                ModalManager.open("logoutConfirmModal");
+            }
+            
+            static closeLogoutConfirm() {
+                ModalManager.close("logoutConfirmModal");
+            }
+            
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+            
+            static setupEventListeners() {
+                document.getElementById("searchInput").addEventListener("keypress", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.searchTable();
+                    }
+                });
+                
+                document.addEventListener("DOMContentLoaded", () => {
+                    window.updateSemesters = this.updateSemesters.bind(this);
+                });
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            ExamManager.init();
+        });
+
+        // Make managers accessible globally
+        window.ExamManager = ExamManager;
+        window.SubjectsManager = SubjectsManager;
+        window.ToastManager = ToastManager;
+        window.ModalManager = ModalManager;
+        window.ValidationManager = ValidationManager;
+    </script>
+</body>
+</html>

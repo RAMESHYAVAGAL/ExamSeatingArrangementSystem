@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Seating</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <style>
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        button, select {
+            cursor: pointer;
+        }
+
+        /* ===== Common Components ===== */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            width: 420px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-info {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: #fff;
+            padding: 10px 30px;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn:disabled:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: linear-gradient(180deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, .2);
+            transform: translateX(5px);
+        }
+
+        /* ===== Main Content ===== */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h3 {
+            color: #2a5298;
+        }
+
+        /* ===== Form Elements ===== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 3px;
+            display: none;
+        }
+
+        /* ===== Two Column Form Layout ===== */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        /* ===== Four Column Form Layout ===== */
+        .form-row-4col {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-col-4col {
+            flex: 1;
+        }
+
+        /* ===== Seating Grid ===== */
+        .seating-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .seat {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .seat:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .seat.empty {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            cursor: not-allowed;
+        }
+
+        .seat.empty:hover {
+            background: linear-gradient(135deg, #64748b, #475569);
+            transform: none;
+        }
+
+        .seat.selected {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+        }
+
+        /* ===== Invigilator Badge ===== */
+        .invigilator-badge {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        /* ===== Quick Actions ===== */
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 9999;
+            transition: top 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+
+        .toast-success { background: #16a34a; }
+        .toast-info { background: #2563eb; }
+        .toast-error { background: #dc2626; }
+        .toast-warning { background: #f59e0b; }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            height: 40px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ===== Action Buttons (Smaller) ===== */
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        /* ===== Card Header ===== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-header h2 {
+            color: #2a5298;
+            font-size: 1.5rem;
+        }
+
+        /* ===== Modal Backdrop Fix ===== */
+        .modal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: -1;
+        }
+
+        /* ===== Logout Modal Styles ===== */
+        .logout-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logout-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .logout-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logout-message .highlight {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .logout-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ===== Utility Classes ===== */
+        .hidden {
+            display: none !important;
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gap-10 { gap: 10px; }
+        .gap-15 { gap: 15px; }
+        .gap-20 { gap: 20px; }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-15 { margin-top: 15px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+
+        .mb-10 { margin-bottom: 10px; }
+        .mb-15 { margin-bottom: 15px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main {
+                margin-left: 200px;
+            }
+            .footer {
+                left: 200px;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 420px;
+            }
+            .form-row, .form-row-4col {
+                flex-direction: column;
+                gap: 0;
+            }
+            .seating-grid {
+                gap: 8px;
+            }
+            .seat {
+                width: 50px;
+                height: 50px;
+                font-size: 12px;
+            }
+            .logout-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logout-actions .btn {
+                width: 100%;
+            }
+            .quick-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .quick-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .footer {
+                left: 0;
+            }
+            .card-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation">
+        <h2>Admin Panel</h2>
+        <a href="/admin-dashboard">🏠 Home</a>
+        <a href="/students">👨‍🎓 Students</a>
+        <a href="/exams">📝 Exams</a>
+        <a href="/rooms">🏫 Rooms</a>
+        <a href="/invigilators">👨‍🏫 Invigilators</a>
+        <a href="/generate-seating">🔄 Generate Seating</a>
+        <a href="/view-seating" class="active">👀 View Seating</a>
+        <a href="/charts">📊 Charts</a>
+        <a href="/bulk-upload">📤 Bulk Upload</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <h3>View Seating Arrangement</h3>
+            <button type="button" class="btn btn-danger" onclick="ViewSeatingManager.openLogoutConfirm()">
+                🚪 Logout
+            </button>
+            <form id="logoutForm" action="/logout" method="post" style="display: none;"></form>
+        </header>
+
+        <!-- Quick Actions Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Quick Actions</h2>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-success" onclick="window.location.href='/bulk-upload'">
+                    📤 Bulk Upload
+                </button>
+                <!--<button class="btn btn-info" onclick="ViewSeatingManager.refreshSeating()">
+                    🔄 Refresh View
+                </button>-->
+            </div>
+        </section>
+
+        <!-- Selection Card -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Select Exam & Room</h2>
+            </div>
+            
+            <!-- Year and Semester Row -->
+            <div class="form-row-4col">
+                <div class="form-col-4col">
+                    <label for="yearSelect" class="form-label">Year *</label>
+                    <select id="yearSelect" class="form-control">
+                        <option value="">-- Select Year --</option>
+                        <option value="1">First Year</option>
+                        <option value="2">Second Year</option>
+                        <option value="3">Third Year</option>
+                        <option value="4">Fourth Year</option>
+                        <option value="5">Fifth Year</option>
+                    </select>
+                    <div id="yearErr" class="error-text"></div>
+                </div>
+                
+                <div class="form-col-4col">
+                    <label for="semesterSelect" class="form-label">Semester *</label>
+                    <select id="semesterSelect" class="form-control">
+                        <option value="">-- Select Semester --</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                        <option value="5">Semester 5</option>
+                        <option value="6">Semester 6</option>
+                        <option value="7">Semester 7</option>
+                        <option value="8">Semester 8</option>
+                    </select>
+                    <div id="semesterErr" class="error-text"></div>
+                </div>
+                
+                <div class="form-col-4col">
+                    <label for="examSelect" class="form-label">Exam *</label>
+                    <select id="examSelect" class="form-control" disabled>
+                        <option value="">-- Select Exam --</option>
+                    </select>
+                    <div id="examErr" class="error-text"></div>
+                </div>
+                
+                <div class="form-col-4col">
+                    <label for="roomSelect" class="form-label">Room *</label>
+                    <select id="roomSelect" class="form-control" disabled>
+                        <option value="">-- Select Room --</option>
+                    </select>
+                    <div id="roomErr" class="error-text"></div>
+                </div>
+            </div>
+            
+            <div class="form-row mt-20">
+                <div class="form-col">
+                    <button class="btn btn-primary" onclick="ViewSeatingManager.viewSeating()" style="width: 25%; padding: 8px 16px;">
+                        👀 View Seating
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Invigilator Assignment Card -->
+        <section class="card hidden" id="invigilatorCard">
+            <div class="card-header">
+                <h2>Assign Invigilator</h2>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <label for="invigilatorSelect" class="form-label">Invigilator *</label>
+                    <select id="invigilatorSelect" class="form-control">
+                        <option value="">-- Select Invigilator --</option>
+                    </select>
+                    <div id="invigilatorErr" class="error-text"></div>
+                </div>
+            </div>
+            
+            <div class="form-row mt-15">
+                <div class="form-col">
+                    <button class="btn btn-primary" onclick="ViewSeatingManager.assignInvigilator()" style="width: 25%; padding: 8px 16px;">
+                        👨‍🏫 Assign Invigilator
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Assigned Invigilator Display -->
+            <div class="hidden" id="assignedInvigilatorSection">
+                <div class="mt-20">
+                    <h4>Currently Assigned</h4>
+                    <div class="invigilator-badge mt-10">
+                        👨‍🏫 <span id="assignedInvigilatorName"></span>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons (Smaller) -->
+                <div class="form-row mt-20">
+                    <div class="form-col">
+                        <div class="action-buttons" style="justify-content: space-between;">
+                            <button class="btn btn-info action-btn" onclick="ViewSeatingManager.previewSeating()">
+                                📄 Preview
+                            </button>
+                            <button class="btn btn-warning action-btn" onclick="ViewSeatingManager.downloadPDF()">
+                                ⬇ PDF
+                            </button>
+                            <button class="btn btn-secondary action-btn" onclick="ViewSeatingManager.refreshSeating()">
+                                🔄 Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seating Layout Card -->
+        <section class="card hidden" id="seatingLayoutCard">
+            <div class="card-header">
+                <h2>Seating Layout</h2>
+            </div>
+            
+            <div class="seating-grid" id="seatingGrid"></div>
+            
+            <div class="mt-20">
+                <p style="color: #6b7280; font-size: 14px;">
+                    <strong>Instructions:</strong> Click on any seat to view student details
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Student Details Modal -->
+    <div class="modal" id="studentModal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle">
+        <div class="modal-content" style="text-align: left; max-width: 420px;">
+            <div class="logout-icon">👨‍🎓</div>
+            <div class="logout-title" style="color: #2a5298; margin-bottom: 20px;">Student Details</div>
+            
+            <div style="margin-bottom: 12px;">
+                <strong style="color: #374151;">Seat Number:</strong> <span id="seatNumber" style="color: #1e3c72; font-weight: 600;"></span>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <strong style="color: #374151;">Student Name:</strong> <span id="studentName" style="color: #1e3c72; font-weight: 600;"></span>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <strong style="color: #374151;">Roll Number:</strong> <span id="rollNumber" style="color: #1e3c72; font-weight: 600;"></span>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <strong style="color: #374151;">Department:</strong> <span id="department" style="color: #1e3c72; font-weight: 600;"></span>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <strong style="color: #374151;">Year:</strong> <span id="year" style="color: #1e3c72; font-weight: 600;"></span>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="ViewSeatingManager.closeStudentModal()" style="padding: 8px 20px;">
+                    ❌ Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal - Enhanced -->
+    <div class="modal" id="logoutConfirmModal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="text-align: center; max-width: 420px;">
+            <div class="logout-icon">🚪</div>
+            <div class="logout-title">Confirm Logout</div>
+            <div class="logout-message">
+                Are you sure you want to logout?<br>
+                You will need to <span class="highlight">login again</span> to access your account.
+            </div>
+            <div class="logout-actions">
+                <button class="btn btn-cancel" onclick="ViewSeatingManager.closeLogoutConfirm()">
+                    ❌ Cancel
+                </button>
+                <button class="btn btn-logout" onclick="ViewSeatingManager.confirmLogout()">
+                    ✅ Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2026 Exam Seating Arrangement System
+    </footer>
+
+    <script>
+        // Configuration
+        const Config = {
+            EXAM_API: "/api/admin/exams",
+            ROOM_API: "/api/admin/rooms",
+            VIEW_API: "/api/admin/view-seating/data",
+            INVIGILATOR_API: "/api/admin/invigilators",
+            ASSIGN_API: "/api/admin/view-seating",
+            TOAST_DURATION: 3500
+        };
+
+        // Toast Notification Manager
+        class ToastManager {
+            static show(type, message) {
+                const toast = document.getElementById("toast");
+                toast.className = `toast toast-${type} show`;
+                toast.textContent = message;
+                toast.setAttribute("aria-live", "assertive");
+                
+                setTimeout(() => {
+                    toast.className = "toast";
+                    toast.setAttribute("aria-live", "polite");
+                }, Config.TOAST_DURATION);
+            }
+            
+            static success(message) { this.show("success", message); }
+            static info(message) { this.show("info", message); }
+            static error(message) { this.show("error", message); }
+            static warning(message) { this.show("warning", message); }
+        }
+
+        // Modal Manager
+        class ModalManager {
+            static open(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                    modal.addEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static close(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                }
+            }
+            
+            static closeAll() {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = "none";
+                    modal.setAttribute("aria-hidden", "true");
+                    modal.removeEventListener('click', this.handleBackdropClick);
+                });
+                document.body.style.overflow = "";
+            }
+            
+            static handleBackdropClick(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.stopPropagation();
+                }
+            }
+        }
+
+        // View Seating Manager
+        class ViewSeatingManager {
+            static selectedYear = null;
+            static selectedSemester = null;
+            static selectedExam = null;
+            static selectedRoom = null;
+            static roomColumns = 0;
+            static currentSeatingData = null;
+            static allExams = [];
+            static allRooms = [];
+            
+            static async init() {
+                await this.loadExams();
+                await this.loadRooms();
+                await this.loadInvigilators();
+                this.setupEventListeners();
+            }
+            
+            static async loadExams() {
+                try {
+                    const response = await fetch(Config.EXAM_API);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const result = await response.json();
+                    this.allExams = Array.isArray(result) ? result : (result.data || []);
+                    this.updateExamDropdown();
+                } catch (error) {
+                    console.error("Failed to load exams:", error);
+                    ToastManager.error("Failed to load exams.");
+                }
+            }
+            
+            static async loadRooms() {
+                try {
+                    const response = await fetch(Config.ROOM_API);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const result = await response.json();
+                    this.allRooms = Array.isArray(result) ? result : (result.data || []);
+                    this.updateRoomDropdown();
+                } catch (error) {
+                    console.error("Failed to load rooms:", error);
+                    ToastManager.error("Failed to load rooms.");
+                }
+            }
+            
+            static async loadInvigilators() {
+                try {
+                    const response = await fetch(Config.INVIGILATOR_API);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const result = await response.json();
+                    const invigilators = Array.isArray(result) ? result : (result.data || []);
+                    const invSelect = document.getElementById("invigilatorSelect");
+                    invSelect.innerHTML = '<option value="">-- Select Invigilator --</option>';
+                    
+                    invigilators.forEach(inv => {
+                        invSelect.innerHTML += `<option value="${inv.id}">${inv.name} (${inv.employeeId})</option>`;
+                    });
+                } catch (error) {
+                    console.error("Failed to load invigilators:", error);
+                    ToastManager.error("Failed to load invigilators.");
+                }
+            }
+            
+            static async loadAvailableInvigilators(examId) {
+                try {
+                    const response = await fetch(`${Config.ASSIGN_API}/available-invigilators/${examId}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const result = await response.json();
+                    const invigilators = Array.isArray(result) ? result : (result.data || []);
+                    const invSelect = document.getElementById("invigilatorSelect");
+                    invSelect.innerHTML = '<option value="">-- Select Invigilator --</option>';
+                    
+                    if (invigilators.length === 0) {
+                        invSelect.innerHTML += `<option value="" disabled>No available invigilators - all assigned</option>`;
+                        invSelect.disabled = true;
+                        return;
+                    }
+                    
+                    invigilators.forEach(inv => {
+                        invSelect.innerHTML += `<option value="${inv.id}">${inv.name} (${inv.employeeId}) - ${inv.department}</option>`;
+                    });
+                    invSelect.disabled = false;
+                } catch (error) {
+                    console.error("Failed to load available invigilators:", error);
+                    await this.loadInvigilators();
+                }
+            }
+            
+            static updateExamDropdown() {
+                const examSelect = document.getElementById("examSelect");
+                const selectedYear = document.getElementById("yearSelect").value;
+                const selectedSemester = document.getElementById("semesterSelect").value;
+                
+                examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
+                
+                if (this.allExams.length === 0) {
+                    examSelect.innerHTML += `<option value="" disabled>No exams available</option>`;
+                    examSelect.disabled = true;
+                    return;
+                }
+                
+                this.allExams.forEach(exam => {
+                    const displayText = `${exam.examName} (${exam.examDate}) - Year ${exam.year || 'N/A'}, Sem ${exam.semester || 'N/A'}`;
+                    examSelect.innerHTML += `<option value="${exam.id}">${displayText}</option>`;
+                });
+                
+                examSelect.disabled = false;
+            }
+            
+            static updateRoomDropdown() {
+                const roomSelect = document.getElementById("roomSelect");
+                roomSelect.innerHTML = '<option value="">-- Select Room --</option>';
+                
+                if (this.allRooms.length === 0) {
+                    roomSelect.innerHTML += `<option value="" disabled>No rooms available</option>`;
+                    roomSelect.disabled = true;
+                    return;
+                }
+                
+                this.allRooms.forEach(room => {
+                    roomSelect.innerHTML += `<option value="${room.id}" data-cols="${room.cols || 0}">${room.roomCode} - ${room.roomName}</option>`;
+                });
+                
+                roomSelect.disabled = !this.selectedExam;
+            }
+            
+            static async viewSeating() {
+                this.selectedYear = document.getElementById("yearSelect").value;
+                this.selectedSemester = document.getElementById("semesterSelect").value;
+                this.selectedExam = document.getElementById("examSelect").value;
+                this.selectedRoom = document.getElementById("roomSelect").value;
+                
+                if (!this.selectedYear || !this.selectedSemester) {
+                    ToastManager.warning("Please select both year and semester.");
+                    return;
+                }
+                
+                if (!this.selectedExam || !this.selectedRoom) {
+                    ToastManager.warning("Please select both exam and room.");
+                    return;
+                }
+                
+                const roomSelect = document.getElementById("roomSelect");
+                const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+                this.roomColumns = parseInt(selectedOption.dataset.cols) || 4;
+                
+                const viewBtn = document.querySelector('button[onclick="ViewSeatingManager.viewSeating()"]');
+                const originalText = viewBtn.textContent;
+                viewBtn.textContent = "⏳ Loading...";
+                viewBtn.disabled = true;
+                
+                try {
+                    const response = await fetch(
+                        `${Config.VIEW_API}?examId=${this.selectedExam}&roomId=${this.selectedRoom}&year=${this.selectedYear}&semester=${this.selectedSemester}`
+                    );
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.currentSeatingData = data;
+                    
+                    const seats = data.seats || [];
+                    if (!seats.length) {
+                        ToastManager.info("No seating arrangement found for this exam and room.");
+                        document.getElementById("invigilatorCard").classList.add("hidden");
+                        document.getElementById("seatingLayoutCard").classList.add("hidden");
+                        return;
+                    }
+                    
+                    this.renderSeatingGrid(seats);
+                    
+                    document.getElementById("invigilatorCard").classList.remove("hidden");
+                    document.getElementById("seatingLayoutCard").classList.remove("hidden");
+                    
+                    const assignBtn = document.querySelector('button[onclick="ViewSeatingManager.assignInvigilator()"]');
+                    const invSelect = document.getElementById("invigilatorSelect");
+                    
+                    if (data.invigilatorName) {
+                        document.getElementById("assignedInvigilatorName").textContent = data.invigilatorName;
+                        document.getElementById("assignedInvigilatorSection").classList.remove("hidden");
+                        
+                        assignBtn.textContent = "✅ Assigned";
+                        assignBtn.disabled = true;
+                        assignBtn.style.opacity = "0.6";
+                        assignBtn.style.cursor = "not-allowed";
+                        
+                        invSelect.disabled = true;
+                        
+                        ToastManager.info("Invigilator already assigned to this exam room.");
+                    } else {
+                        document.getElementById("assignedInvigilatorSection").classList.add("hidden");
+                        
+                        assignBtn.textContent = "👨‍🏫 Assign Invigilator";
+                        assignBtn.disabled = false;
+                        assignBtn.style.opacity = "1";
+                        assignBtn.style.cursor = "pointer";
+                        
+                        await this.loadAvailableInvigilators(this.selectedExam);
+                    }
+                    
+                    ToastManager.success("Seating arrangement loaded successfully.");
+                } catch (error) {
+                    console.error("Failed to load seating:", error);
+                    ToastManager.error(error.message || "Failed to load seating arrangement.");
+                } finally {
+                    viewBtn.textContent = originalText;
+                    viewBtn.disabled = false;
+                }
+            }
+            
+            static renderSeatingGrid(seats) {
+                const seatingGrid = document.getElementById("seatingGrid");
+                seatingGrid.innerHTML = "";
+                
+                const cols = this.roomColumns > 0 ? this.roomColumns : 4;
+                seatingGrid.style.gridTemplateColumns = `repeat(${cols}, 60px)`;
+                
+                seats.forEach(seat => {
+                    const seatElement = document.createElement("div");
+                    const isOccupied = seat.studentName && seat.studentName !== "Not Assigned" && seat.studentName !== "Student Not Found";
+                    seatElement.className = isOccupied ? "seat" : "seat empty";
+                    seatElement.textContent = seat.seatNumber || "?";
+                    seatElement.title = isOccupied ? `Seat ${seat.seatNumber}: ${seat.studentName}` : `Seat ${seat.seatNumber}: Empty`;
+                    
+                    if (isOccupied) {
+                        seatElement.addEventListener("click", () => {
+                            this.openStudentModal(seat);
+                        });
+                    }
+                    
+                    seatingGrid.appendChild(seatElement);
+                });
+            }
+            
+            static async assignInvigilator() {
+                const invigilatorId = document.getElementById("invigilatorSelect").value;
+                
+                if (!invigilatorId) {
+                    ToastManager.warning("Please select an invigilator.");
+                    return;
+                }
+                
+                const year = document.getElementById("yearSelect").value;
+                const semester = document.getElementById("semesterSelect").value;
+                
+                if (!this.selectedExam || !this.selectedRoom || !year || !semester) {
+                    ToastManager.warning("Please select exam, room, year and semester first.");
+                    return;
+                }
+                
+                const assignBtn = document.querySelector('button[onclick="ViewSeatingManager.assignInvigilator()"]');
+                const originalText = assignBtn.textContent;
+                assignBtn.textContent = "⏳ Assigning...";
+                assignBtn.disabled = true;
+                
+                try {
+                    const response = await fetch(`${Config.ASSIGN_API}/assign-invigilator`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            examId: parseInt(this.selectedExam),
+                            roomId: parseInt(this.selectedRoom),
+                            invigilatorId: parseInt(invigilatorId),
+                            year: parseInt(year),
+                            semester: parseInt(semester)
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    await this.viewSeating();
+                    
+                    ToastManager.success("Invigilator assigned successfully.");
+                } catch (error) {
+                    console.error("Failed to assign invigilator:", error);
+                    ToastManager.error(error.message || "Failed to assign invigilator.");
+                } finally {
+                    assignBtn.textContent = originalText;
+                    assignBtn.disabled = false;
+                }
+            }
+            
+            static openStudentModal(student) {
+                document.getElementById("seatNumber").textContent = student.seatNumber || "N/A";
+                document.getElementById("studentName").textContent = student.studentName || "Not Assigned";
+                document.getElementById("rollNumber").textContent = student.rollNo || "N/A";
+                document.getElementById("department").textContent = student.department || "N/A";
+                document.getElementById("year").textContent = student.year || "N/A";
+                
+                ModalManager.open("studentModal");
+            }
+            
+            static closeStudentModal() {
+                ModalManager.close("studentModal");
+            }
+            
+            static previewSeating() {
+                if (!this.selectedExam || !this.selectedRoom || !this.selectedYear || !this.selectedSemester) {
+                    ToastManager.warning("Please select exam, room, year and semester first.");
+                    return;
+                }
+                
+                window.open(
+                    `/admin/seating-preview?examId=${this.selectedExam}&roomId=${this.selectedRoom}&year=${this.selectedYear}&semester=${this.selectedSemester}`,
+                    "_blank"
+                );
+            }
+
+            static downloadPDF() {
+                if (!this.selectedExam || !this.selectedRoom || !this.selectedYear || !this.selectedSemester) {
+                    ToastManager.warning("Please select exam, room, year and semester first.");
+                    return;
+                }
+                
+                window.location.href = `/admin/seating/download?examId=${this.selectedExam}&roomId=${this.selectedRoom}&year=${this.selectedYear}&semester=${this.selectedSemester}`;
+            }
+            
+            static refreshSeating() {
+                if (this.selectedExam && this.selectedRoom) {
+                    this.viewSeating();
+                } else {
+                    ToastManager.info("Please select exam and room first.");
+                }
+            }
+            
+            static openLogoutConfirm() {
+                ModalManager.open("logoutConfirmModal");
+            }
+            
+            static closeLogoutConfirm() {
+                ModalManager.close("logoutConfirmModal");
+            }
+            
+            static confirmLogout() {
+                document.getElementById("logoutForm").submit();
+            }
+            
+            static setupEventListeners() {
+                document.getElementById("yearSelect").addEventListener("change", () => {
+                    this.updateExamDropdown();
+                    this.updateRoomDropdown();
+                    
+                    document.getElementById("examSelect").value = "";
+                    this.selectedExam = null;
+                    
+                    document.getElementById("roomSelect").value = "";
+                    this.selectedRoom = null;
+                    
+                    document.getElementById("invigilatorCard").classList.add("hidden");
+                    document.getElementById("seatingLayoutCard").classList.add("hidden");
+                });
+                
+                document.getElementById("semesterSelect").addEventListener("change", () => {
+                    this.updateExamDropdown();
+                    this.updateRoomDropdown();
+                    
+                    document.getElementById("examSelect").value = "";
+                    this.selectedExam = null;
+                    
+                    document.getElementById("roomSelect").value = "";
+                    this.selectedRoom = null;
+                    
+                    document.getElementById("invigilatorCard").classList.add("hidden");
+                    document.getElementById("seatingLayoutCard").classList.add("hidden");
+                });
+                
+                document.getElementById("examSelect").addEventListener("change", () => {
+                    this.selectedExam = document.getElementById("examSelect").value;
+                    this.updateRoomDropdown();
+                    
+                    document.getElementById("roomSelect").value = "";
+                    this.selectedRoom = null;
+                    
+                    document.getElementById("invigilatorCard").classList.add("hidden");
+                    document.getElementById("seatingLayoutCard").classList.add("hidden");
+                });
+                
+                document.getElementById("roomSelect").addEventListener("change", () => {
+                    this.selectedRoom = document.getElementById("roomSelect").value;
+                });
+                
+                document.getElementById("examSelect").addEventListener("keypress", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.viewSeating();
+                    }
+                });
+                
+                document.getElementById("roomSelect").addEventListener("keypress", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.viewSeating();
+                    }
+                });
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            ViewSeatingManager.init();
+        });
+
+        // Make manager accessible globally for HTML onclick handlers
+        window.ViewSeatingManager = ViewSeatingManager;
+        window.ToastManager = ToastManager;
+        window.ModalManager = ModalManager;
+    </script>
+</body>
+</html>
